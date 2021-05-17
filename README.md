@@ -16,15 +16,15 @@ Clicking the Anki button will send the current word and definition straight to A
 
 ![bubble-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/popup.PNG)
 
-## Usage
+## Settings
 
 Exported data fields:
 
- 1) `(Screenshot)` - an image of video taken at time when button is pressed
- 2) `(Subtitle)` - the current subtitle visible on screen
- 3) `(Word)` - selected word
- 4) `(Basic)` Translation - the transaltion of the selected word
- 5) `(Other)` Translation - the extra translations of the word, formatted in HTML
+ 1) `Screenshot` - an image of video taken at time when button is pressed
+ 2) `Subtitle` - the current subtitle visible on screen
+ 3) `Word` - selected word
+ 4) `Basic Translation` - the transaltion of the selected word
+ 5) `Other Translation` - the extra translations of the word, formatted in HTML
  6) `(URL)` - URL of current video with the current timestamp
 
 Settings allow you to choose which fields are filled with what data. A blank options means that data is skipped

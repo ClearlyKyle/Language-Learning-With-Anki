@@ -1,0 +1,41 @@
+p {
+  text-align: center;
+}
+
+body {
+  width: 350px;
+}
+
+form {
+  margin: 10px 0;
+  text-align: left;
+}
+
+label {
+  display: block;
+  margin: 10px 0;
+}
+
+label span {
+  display: inline-block;
+  text-align: right;
+  width: 90px;
+}
+
+select {
+  width: 190px;
+  margin-left: 10px;
+  height: 20px;
+}
+
+#ankiConnectUrl {
+  width: 190px;
+  height: 20px;
+  margin-left: 10px;
+}
+
+#saveAnkiBtn {
+  display: block;
+  width: 100px;
+  margin: 0 auto;
+}

@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "LLW to Anki",
+  "description": "SAve words from LLW and send to Anki",
+  "version": "1.0",
+  "author": "@clearlykyle",
+  "permissions": [
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "all_frames": true,
+      "js": [
+        "content_script.js"
+      ],
+      "matches": [
+        "*://*.youtube.com/watch*"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_action": {
+    "default_title": "LLW to Anki",
+    "default_popup": "popup/popup.html"
+  }
+}

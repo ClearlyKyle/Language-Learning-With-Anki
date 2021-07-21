@@ -76,6 +76,10 @@ function LLW_sendtoAnki() {
 
 	var subtitle = document.getElementsByClassName('lln-subs')[0].innerText.replace(word, "<b>" + word + "</b>");
 
+	var notify_div = document.createElement('div')
+	notify_div.id = "notify"
+	document.body.append(notify_div)
+
 	chrome.storage.local.get(
 		['ankiDeckNameSelected', 'ankiNoteNameSelected', 'ankiFieldScreenshotSelected', 'ankiSubtitleSelected',
 			'ankiWordSelected', "ankiBasicTranslationSelected", "ankiOtherTranslationSelected", "ankiFieldURL", "ankiConnectUrl"],
@@ -152,11 +156,44 @@ function LLW_sendtoAnki() {
 							console.log("Fetch Return:")
 							if (data.result === null) {
 								alert("Error!\n" + data.error)
+								/* show error message */
+								Notify({
+									type: 'danger',	// Can be 'success', 'danger', 'warning'
+									position: 'top right',
+									title: data.error,
+									// html: data.error,
+									// html: error,
+									duration: 5000,
+								})
 							}
+
+							/* display sucess message */
+							Notify({
+								type: 'success',	// Can be 'success', 'danger', 'warning'
+								position: 'top right',
+								title: 'Card created',
+								// html: 'This is <b> content </b>',
+								duration: 2000,
+							})
+
 							console.log("Sucess")
-						}).catch((error) => console.log("EEROR! ", error));
+						}).catch((error) => {
+							console.log("EEROR! ", error)
+						});
 				})
-				.catch((error) => console.log("EEROR! ", error));
+				.catch((error) => {
+					/* show error message when anki isnt open */
+					//tata.error('Error', error, tata_settings)
+					console.log("EEROR! ", error);
+					Notify({
+						type: 'warning',	// Can be 'success', 'danger', 'warning'
+						position: 'top right',
+						title: 'Error',
+						html: 'Check anki is running',
+						// html: error,
+						duration: 5000,
+					})
+				})
 			console.log("Sent to ANKI complete!\n");
 		});
 }

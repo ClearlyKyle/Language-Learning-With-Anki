@@ -2,23 +2,30 @@
 console.log("----- [content_script.js] LOADED");
 
 /* YOUTUBE */
-if (window.location.href.includes("youtube.com/watch")) {
+if (window.location.href.includes("youtube.com/watch"))
+{
 	console.log("Adding button to youtube video")
 
-	var checkExist = setInterval(function () {
-		if (document.getElementsByClassName('lln-full-dict').length) {
+	var checkExist = setInterval(function ()
+	{
+		if (document.getElementsByClassName('lln-full-dict').length)
+		{
 			console.log("Start monitoring mutations")
 
-			var observer = new MutationObserver(function (mutations) {
+			var observer = new MutationObserver(function (mutations)
+			{
 				console.log("MUTATIONS")
-				for (let mutation of mutations) {
-					if (mutation.removedNodes.length === 2) {
+				for (let mutation of mutations)
+				{
+					if (mutation.removedNodes.length === 2)
+					{
 						let btn_location = mutation.addedNodes[1].children[3].children[0].children[0]
 						console.log(btn_location)
 
 						let anki_div = document.createElement("div");
 						anki_div.className = "lln-external-dict-btn tippy";
 						anki_div.innerHTML = "Anki";
+						anki_div.setAttribute("data-tippy-content", "Send to Anki");
 						anki_div.onclick = LLW_sendtoAnki;
 
 						btn_location.appendChild(anki_div)
@@ -34,7 +41,8 @@ if (window.location.href.includes("youtube.com/watch")) {
 }
 
 /* ----------------------------------------------------------------------------------------------------------- */
-function LLW_sendtoAnki() {
+function LLW_sendtoAnki()
+{
 	console.log("")
 	console.log("")
 	console.log("LLW_sendtoAnki -> Sending to ANKI")
@@ -55,14 +63,21 @@ function LLW_sendtoAnki() {
 	const imageFilename = 'Youtube2Anki_' + canvas.width + 'x' + canvas.height + '-' + Math.random().toString(36).substring(7) + '.png';
 
 	/* Getting translation of the word selected */
-	if (document.getElementsByClassName('lln-dict-contextual').length) {
-		var word = document.getElementsByClassName('lln-dict-contextual')[0].children[0].innerText;
-		var translation = document.getElementsByClassName('lln-dict-contextual')[0].innerText.replace(/(?:\r\n|\r|\n)/g, '<br>');
-	} else {
+	// make sure the translation language is set to english
+	if (document.getElementsByClassName('lln-dict-contextual').length)
+	{
+		var word = document.getElementsByClassName('lln-dict-contextual')[0].children[1].innerText;
+		var translation_text = document.getElementsByClassName('lln-dict-contextual')[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
+		var translation_text_without_most_common_number = translation_text.split("\n").slice(1);// removing the 3k, 2k, 4k, from the translation
+		//var translation = translation_text_without_most_common_number.join('\n').replace(/(?:\r\n|\r|\n)/g, '<br>'); // replace line brea '\n' with <br> tag
+		var translation = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
+	} else
+	{
 		var word = ""
 		var translation = ""
 	}
-	if (document.getElementsByClassName('lln-dict-section-full').length) {
+	if (document.getElementsByClassName('lln-dict-section-full').length)
+	{
 		//var extra_definitions = document.getElementsByClassName('lln-dict-section-full')[0].innerText.replace(/(?:\r\n|\r|\n)/g, '<br>');
 		var extra_definitions = document.getElementsByClassName('lln-dict-section-full')[0].innerHTML;
 	}
@@ -74,6 +89,7 @@ function LLW_sendtoAnki() {
 
 	console.log("Video URL (and time stamp) =", youtube_share_url)
 
+	// make selected word bold in the subtitles
 	var subtitle = document.getElementsByClassName('lln-subs')[0].innerText.replace(word, "<b>" + word + "</b>");
 
 	var notify_div = document.createElement('div')
@@ -84,7 +100,8 @@ function LLW_sendtoAnki() {
 		['ankiDeckNameSelected', 'ankiNoteNameSelected', 'ankiFieldScreenshotSelected', 'ankiSubtitleSelected',
 			'ankiWordSelected', "ankiBasicTranslationSelected", "ankiOtherTranslationSelected", "ankiFieldURL", "ankiConnectUrl"],
 		({ ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected,
-			ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl }) => {
+			ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl }) =>
+		{
 			url = ankiConnectUrl || 'http://localhost:8765';
 			model = ankiNoteNameSelected || 'Basic';
 			deck = ankiDeckNameSelected || 'Default';
@@ -145,16 +162,19 @@ function LLW_sendtoAnki() {
 				body: JSON.stringify(permission_data),
 			})
 				.then((res) => res.json())
-				.then((data) => {
+				.then((data) =>
+				{
 					console.log(data);
 					fetch(url, {
 						method: "POST",
 						body: JSON.stringify(body),
 					})
 						.then((res) => res.json())
-						.then((data) => {
+						.then((data) =>
+						{
 							console.log("Fetch Return:")
-							if (data.result === null) {
+							if (data.result === null)
+							{
 								alert("Error!\n" + data.error)
 								/* show error message */
 								Notify({
@@ -177,11 +197,13 @@ function LLW_sendtoAnki() {
 							})
 
 							console.log("Sucess")
-						}).catch((error) => {
+						}).catch((error) =>
+						{
 							console.log("EEROR! ", error)
 						});
 				})
-				.catch((error) => {
+				.catch((error) =>
+				{
 					/* show error message when anki isnt open */
 					//tata.error('Error', error, tata_settings)
 					console.log("EEROR! ", error);

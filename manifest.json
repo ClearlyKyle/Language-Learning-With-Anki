@@ -12,12 +12,15 @@
       "all_frames": true,
       "js": [
         "content_script.js",
-        "resources/buzz.js"
+        "resources/toastify.js"
+      ],
+      "css": [
+        "resources/toastify.css"
       ],
       "matches": [
         "*://*.youtube.com/watch*"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     }
   ],
   "browser_action": {

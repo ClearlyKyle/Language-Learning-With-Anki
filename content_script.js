@@ -173,49 +173,56 @@ function LLW_sendtoAnki()
 						.then((data) =>
 						{
 							console.log("Fetch Return:")
+							console.log(data)
 							if (data.result === null)
 							{
-								alert("Error!\n" + data.error)
-								/* show error message */
-								Notify({
-									type: 'danger',	// Can be 'success', 'danger', 'warning'
-									position: 'top right',
-									title: data.error,
-									// html: data.error,
-									// html: error,
-									duration: 5000,
-								})
+								// https://jsfiddle.net/2qasgcfd/3/
+								// https://github.com/apvarun/toastify-js
+								Toastify({
+									text: "Error! " + data,
+									duration: 3000,
+									style: {
+										background: "red",
+									}
+								}).showToast();
+								return
 							}
-
-							/* display sucess message */
-							Notify({
-								type: 'success',	// Can be 'success', 'danger', 'warning'
-								position: 'top right',
-								title: 'Card created',
-								// html: 'This is <b> content </b>',
-								duration: 2000,
-							})
-
-							console.log("Sucess")
-						}).catch((error) =>
+							else
+							{
+								/* show sucess message */
+								Toastify({
+									text: "Sucessfully added to ANKI",
+									duration: 3000,
+									style: {
+										background: "light blue",
+									}
+								}).showToast();
+							}
+						})
+						.catch((error) =>
 						{
-							console.log("EEROR! ", error)
-						});
-				})
-				.catch((error) =>
+							/* show error message */
+							Toastify({
+								text: "Error! " + error,
+								duration: 3000,
+								style: {
+									background: "red",
+								}
+							}).showToast();
+						})
+				}).catch((error) =>
 				{
-					/* show error message when anki isnt open */
-					//tata.error('Error', error, tata_settings)
-					console.log("EEROR! ", error);
-					Notify({
-						type: 'warning',	// Can be 'success', 'danger', 'warning'
-						position: 'top right',
-						title: 'Error',
-						html: 'Check anki is running',
-						// html: error,
-						duration: 5000,
-					})
-				})
-			console.log("Sent to ANKI complete!\n");
-		});
+					/* show error message */
+					Toastify({
+						text: "Error! " + error,
+						duration: 3000,
+						style: {
+							background: "red",
+						}
+					}).showToast();
+					console.log(error)
+				});
+			console.log("Send to ANKI complete!\n");
+		}
+	);
 }

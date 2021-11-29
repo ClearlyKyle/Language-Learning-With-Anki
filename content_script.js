@@ -123,7 +123,7 @@ function LLW_sendtoAnki()
 				[ankiWordSelected]: word,
 				[ankiBasicTranslationSelected]: translation,
 				[ankiOtherTranslationSelected]: extra_definitions,
-				[ankiFieldURL]: youtube_share_url
+				[ankiFieldURL]: '<a href="' + youtube_share_url + '">Video Link</a>'
 			};
 
 			var body = {

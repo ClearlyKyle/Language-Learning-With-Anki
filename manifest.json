@@ -20,11 +20,17 @@
       "matches": [
         "*://*.youtube.com/watch*"
       ],
-      "run_at": "document_start"
+      "run_at": "document_end"
     }
   ],
   "browser_action": {
     "default_title": "LLW to Anki",
     "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": true
   }
 }

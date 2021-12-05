@@ -4,8 +4,8 @@ Adds option to send a subtitle to Anki using Ankiconnect
 
 ## Setup
 
-1) You must install [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin.
-2) Yuo must leave the Anki desktop application open in order to connect to it.
+1) Must install [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin.
+2) Must leave the Anki desktop application open in order to connect to it.
 3) Install unpacked extension.
 4) Setup the URL (default is `http://localhost:8765`), deck and model
 

@@ -17,57 +17,6 @@
 		console.log("Adding button to youtube video")
 		SendMessageToBackGround("Adding button to youtube video")
 
-		//// we loop until the element 'lln-full-dict' is available 
-		//var checkExist = setInterval(function ()
-		//{
-		//	SendMessageToBackGround("Wating for 'lln-full-dict' to be loaded...")
-
-		//	if (document.getElementsByClassName('lln-full-dict').length)
-		//	{
-		//		SendMessageToBackGround("'lln-full-dict' has been loaded!")
-
-		//		const observer = new MutationObserver((mutations, obs) =>
-		//		{
-		//			SendMessageToBackGround("[MutationObserver] Looking for popup...")
-
-		//			// look for the popup dictionary
-		//			if (document.getElementsByClassName('lln-external-dict-btn tippy').length >= 5)
-		//			{
-		//				SendMessageToBackGround("[MutationObserver] We found the element and are adding button now...")
-
-		//				// this is the dictionary that popup when you click a word in the subtitle
-		//				let subtitle_dictioary_btn_location = document.getElementsByClassName('lln-full-dict')[0].children[3].children[0].children[0]
-
-		//				// this pops up when you clikc a word in the side bar
-		//				let side_bar_btn_location = document.getElementsByClassName('lln-full-dict')[0].children[3].children[0].children[0]
-
-		//				let btn_location = document.getElementsByClassName('lln-external-dict-btn tippy')[0].parentElement
-
-		//				let anki_div = document.createElement("div");
-		//				anki_div.className = "lln-external-dict-btn tippy";
-		//				anki_div.innerHTML = "Anki";
-		//				anki_div.setAttribute("data-tippy-content", "Send to Anki");
-		//				anki_div.onclick = LLW_sendtoAnki;
-
-		//				btn_location.appendChild(anki_div)
-		//				//subtitle_dictioary_btn_location.appendChild(anki_div)
-		//				//side_bar_btn_location.appendChild(anki_div)
-
-		//				//obs.disconnect();
-		//				//clearInterval(checkExist);
-		//				return;
-		//			}
-		//		});
-		//		observer.observe(document.getElementsByClassName('lln-full-dict-wrap')[0], {
-		//			childList: true,
-		//			subtree: true
-		//		});
-		//		clearInterval(checkExist);
-		//	}
-		//}, 100); // check every 100ms 
-
-
-
 		// we loop until the element 'lln-full-dict' is available 
 		var checkExist = setInterval(function ()
 		{
@@ -101,11 +50,7 @@
 
 	function AddAnkiButtonToPopupDictionary()
 	{
-		SendMessageToBackGround("Boom! we are adding the button now!")
-
-		//let btn_location = mutation.addedNodes[1].children[3].children[0].children[0]
-		let btn_location = document.getElementsByClassName('lln-external-dicts-container')[0]
-		//console.log(btn_location)
+		let btn_location = document.getElementsByClassName('lln-external-dicts-container')[0];
 
 		let anki_div = document.createElement("div");
 		anki_div.className = "anki-btn lln-external-dict-btn tippy";
@@ -114,14 +59,74 @@
 		anki_div.onclick = WhereWasIClicked;
 
 		btn_location.appendChild(anki_div)
+
+		SendMessageToBackGround("Boom! Button has been added!")
 	}
 
-	function WhereWasIClicked()
+	function WhereWasIClicked(event)
 	{
-		SendMessageToBackGround("I was clicked!")
-
 		// dic shown when word in righ subtitle screen is clicked
 		//    "lln-full-dict right"
+		if (document.querySelector('.lln-full-dict.right') != null)
+		{
+			// We have the side bar dictionary open
+			//return;
+			// Jump video to where subtitle is, then pause it before making flashcard
+
+			var all_subs = document.getElementById('lln-vertical-view-subs').children; //returns a HTMLCollection
+
+			for (var i = 0; i < all_subs.length; i++)
+			{ // iterate over it
+				all_subs[i].onclick = function (event)
+				{   // attach event listener individually
+					console.log("CLICKED")
+					console.log(event.target)
+					console.log(event.target.parentNode)
+
+					let index_id = 0;
+					let currentElement = event.target
+
+					// loop for current active 
+					while (currentElement.parentNode != null)
+					{
+						// Remove active tag
+						// Set new active tag
+						// Click active tag
+						if (currentElement.classList.contains("active"))
+						{
+							break;
+						}
+
+						currentElement = currentElement.parentNode;
+						console.log("Current Element..")
+						console.log(currentElement)
+						if (currentElement.hasAttribute("data-index"))
+						{
+
+							console.log(currentElement.getAttribute("data-index"));
+							index_id = currentElement.getAttribute("data-index");
+
+							document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn active")[0].classList.remove("active")
+
+							document.querySelector("[data-index=\"" + index_id + "\"]").classList.add("active")
+							document.querySelector("[data-index=\"" + index_id + "\"]").click()
+							break;
+						}
+					}
+					setTimeout(function ()
+					{
+						//your code to be executed after X ms
+						document.getElementsByClassName('html5-main-video')[0].pause();
+
+					}, 100);
+				}
+			}
+		}
+		else if (document.querySelector('.lln-full-dict') != null)
+		{
+			// We have the subtitle bar dictionary open
+			LLW_sendtoAnki()
+		}
 	}
 
 	/* ----------------------------------------------------------------------------------------------------------- */
@@ -263,52 +268,55 @@
 								{
 									// https://jsfiddle.net/2qasgcfd/3/
 									// https://github.com/apvarun/toastify-js
-									Toastify({
-										text: "Error! " + data,
-										duration: 3000,
-										style: {
-											background: "red",
-										}
-									}).showToast();
+									ShowErrorMessage("Error! " + error);
 									return
 								}
 								else
 								{
 									/* show sucess message */
-									Toastify({
-										text: "Sucessfully added to ANKI",
-										duration: 3000,
-										style: {
-											background: "light blue",
-										}
-									}).showToast();
+									ShowSucessMessage("Sucessfully added to ANKI");
 								}
 							})
 							.catch((error) =>
 							{
 								/* show error message */
-								Toastify({
-									text: "Error! " + error,
-									duration: 3000,
-									style: {
-										background: "red",
-									}
-								}).showToast();
+								ShowErrorMessage("Error! " + error);
 							})
 					}).catch((error) =>
 					{
 						/* show error message */
-						Toastify({
-							text: "Error! " + error,
-							duration: 3000,
-							style: {
-								background: "red",
-							}
-						}).showToast();
-						console.log(error)
+						ShowErrorMessage("Error! " + error);
 					});
-				console.log("Send to ANKI complete!\n");
+				console.log("Send to ANKI complete!");
+				SendMessageToBackGround("[LLW_sendtoAnki] Send to ANKI complete!");
 			}
 		);
 	}
+
+	function ShowSucessMessage(message)
+	{
+		// SUCESS
+		Toastify({
+			text: message,
+			duration: 3000,
+			style: {
+				background: "light blue",
+			}
+		}).showToast();
+		//console.log(message);
+		SendMessageToBackGround(message);
+	}
+	function ShowErrorMessage(message)
+	{
+		Toastify({
+			text: message,
+			duration: 3000,
+			style: {
+				background: "red",
+			}
+		}).showToast();
+		//console.log(message);
+		SendMessageToBackGround(message);
+	}
 })();
+

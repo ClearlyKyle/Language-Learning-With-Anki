@@ -40,6 +40,7 @@
 				observer.observe(document.getElementsByClassName('lln-full-dict-wrap')[0], { attributes: true, childList: true });
 
 				clearInterval(checkExist);
+				AddFunctionsToSideBarSubs();
 
 				// work around to get first instance of dictionary poping up
 				if (document.getElementsByClassName('anki-btn')[0] == null)
@@ -56,11 +57,102 @@
 		anki_div.className = "anki-btn lln-external-dict-btn tippy";
 		anki_div.innerHTML = "Anki";
 		anki_div.setAttribute("data-tippy-content", "Send to Anki");
-		anki_div.onclick = WhereWasIClicked;
+
+		// HANDLE SIDE BAR DICT
+		if (document.querySelector('.lln-full-dict.right') != null)
+			anki_div.onclick = HandleSideBar;
+		// HANDLE SUBTITLE DICT
+		else if (document.querySelector('.lln-full-dict') != null)
+			anki_div.onclick = WhereWasIClicked;
 
 		btn_location.appendChild(anki_div)
 
 		SendMessageToBackGround("Boom! Button has been added!")
+	}
+
+	function HandleSideBar()
+	{
+		SendMessageToBackGround("[HandleSideBar] need to find 'anki-active'")
+
+		if (document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn active") != null)
+			document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn active")[0].classList.remove("active")
+
+		//document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn anki-active")[0].classList.add("active");
+		document.getElementsByClassName("anki-active")[0].classList.add("active");
+		document.querySelector(".lln-vertical-view-sub.lln-with-play-btn.anki-active").click();
+
+		//document.querySelector("[data-index=\"" + index_id + "\"]").classList.add("active")
+		//document.querySelector("[data-index=\"" + index_id + "\"]").click()
+		//document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn anki-active")[0].classList.remove("anki-active")
+
+		setTimeout(function ()
+		{
+			//your code to be executed after X ms
+			document.getElementsByClassName('html5-main-video')[0].pause();
+			setTimeout(function ()
+			{
+				LLW_sendtoAnki();
+			}, 200);
+		}, 200);
+	}
+
+	function AddFunctionsToSideBarSubs()
+	{
+		// We have the side bar dictionary open
+		// Jump video to where subtitle is, then pause it before making flashcard
+
+		var all_subs = document.getElementById('lln-vertical-view-subs').children; //returns a HTMLCollection
+
+		for (var i = 0; i < all_subs.length; i++)
+		{ // iterate over it
+			all_subs[i].onclick = function (event)
+			{   // attach event listener individually
+				console.log("CLICKED")
+				console.log(event.target)
+				console.log(event.target.parentNode)
+
+				let currentElement = event.target
+				let index_id = 0;
+				// loop for current active 
+				while (currentElement.parentNode != null)
+				{
+					// Remove active tag
+					// Set new active tag
+					// Click active tag
+					if (currentElement.classList.contains("active"))
+					{
+						break;
+					}
+
+					currentElement = currentElement.parentNode;
+					console.log("Current Element..")
+					console.log(currentElement)
+					if (currentElement.hasAttribute("data-index"))
+					{
+
+						console.log(currentElement.getAttribute("data-index"));
+						index_id = currentElement.getAttribute("data-index");
+
+						if (document.querySelector(".anki-active") != null)
+							document.getElementsByClassName("anki-active")[0].classList.remove("anki-active")
+						//document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn anki-active")[0].classList.remove("anki-active")
+
+						document.querySelector("[data-index=\"" + index_id + "\"]").classList.add("anki-active")
+
+						console.log("Current Anki Selected Sub")
+						console.log(document.querySelector("[data-index=\"" + index_id + "\"]"))
+						console.log(document.querySelector(".anki-active"))
+						break;
+					}
+				}
+				//setTimeout(function ()
+				//{
+				//	//your code to be executed after X ms
+				//	document.getElementsByClassName('html5-main-video')[0].pause();
+				//	//LLW_sendtoAnki();
+				//}, 100);
+			}
+		}
 	}
 
 	function WhereWasIClicked(event)
@@ -70,62 +162,15 @@
 		if (document.querySelector('.lln-full-dict.right') != null)
 		{
 			// We have the side bar dictionary open
-			//return;
-			// Jump video to where subtitle is, then pause it before making flashcard
 
-			var all_subs = document.getElementById('lln-vertical-view-subs').children; //returns a HTMLCollection
-
-			for (var i = 0; i < all_subs.length; i++)
-			{ // iterate over it
-				all_subs[i].onclick = function (event)
-				{   // attach event listener individually
-					console.log("CLICKED")
-					console.log(event.target)
-					console.log(event.target.parentNode)
-
-					let index_id = 0;
-					let currentElement = event.target
-
-					// loop for current active 
-					while (currentElement.parentNode != null)
-					{
-						// Remove active tag
-						// Set new active tag
-						// Click active tag
-						if (currentElement.classList.contains("active"))
-						{
-							break;
-						}
-
-						currentElement = currentElement.parentNode;
-						console.log("Current Element..")
-						console.log(currentElement)
-						if (currentElement.hasAttribute("data-index"))
-						{
-
-							console.log(currentElement.getAttribute("data-index"));
-							index_id = currentElement.getAttribute("data-index");
-
-							document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn active")[0].classList.remove("active")
-
-							document.querySelector("[data-index=\"" + index_id + "\"]").classList.add("active")
-							document.querySelector("[data-index=\"" + index_id + "\"]").click()
-							break;
-						}
-					}
-					setTimeout(function ()
-					{
-						//your code to be executed after X ms
-						document.getElementsByClassName('html5-main-video')[0].pause();
-
-					}, 100);
-				}
-			}
+			SendMessageToBackGround("SIDE BAR DICTIONARY")
+			AddFunctionsToSideBarSubs();
 		}
 		else if (document.querySelector('.lln-full-dict') != null)
 		{
 			// We have the subtitle bar dictionary open
-			LLW_sendtoAnki()
+			SendMessageToBackGround("SUBTITLE DICTIONARY")
+			LLW_sendtoAnki();
 		}
 	}
 
@@ -150,7 +195,13 @@
 		var dataURL = canvas.toDataURL("image/png");
 		dataURL = dataURL.replace(/^data:image\/(png|jpg);base64,/, "")
 
-		const imageFilename = 'Youtube2Anki_' + canvas.width + 'x' + canvas.height + '-' + Math.random().toString(36).substring(7) + '.png';
+		/* making time stamped url */
+		var videoId = document.querySelectorAll('[itemprop="videoId"]')[0].content;
+		var current_time = document.querySelector(".video-stream").currentTime.toFixed();
+		var youtube_share_url = "https://youtu.be/" + videoId + "?t=" + current_time; /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
+
+		/* make the file name unique to avoid duplicates */
+		const imageFilename = 'Youtube2Anki_' + canvas.width + 'x' + canvas.height + '_' + videoId + '_' + Math.random().toString(36).substring(7) + '.png';
 
 		/* Getting translation of the word selected */
 		// make sure the translation language is set to english
@@ -172,10 +223,6 @@
 			var extra_definitions = document.getElementsByClassName('lln-dict-section-full')[0].innerHTML;
 		}
 
-		/* making time stamped url */
-		var videoId = document.querySelectorAll('[itemprop="videoId"]')[0].content;
-		var current_time = document.querySelector(".video-stream").currentTime.toFixed();
-		var youtube_share_url = "https://youtu.be/" + videoId + "?t=" + current_time; /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
 
 		console.log("Video URL (and time stamp) =", youtube_share_url)
 

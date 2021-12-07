@@ -215,7 +215,7 @@
 		console.log("Video URL (and time stamp) =", youtube_share_url)
 
 		// make selected word bold in the subtitles
-		var subtitle = document.getElementsByClassName('lln-subs')[0].innerText.replace(word, "<b>" + word + "</b>");
+		var subtitle = document.getElementsByClassName('lln-subs')[0].innerText.replace(word, "<b>" + word.toLowerCase() + "</b>");
 
 		var fields = {
 			"image-filename": '',

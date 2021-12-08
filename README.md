@@ -1,6 +1,12 @@
-# Language-Learning-With-Anki
+# Language Learning With Anki
 
-Adds option to send a subtitle to Anki using Ankiconnect
+## Langauge Reactor to Anki
+
+Adds an option to create Anki flash cards with the Language Reactor chrome extension
+
+Language Reactor can be found here:
+> https://chrome.google.com/webstore/detail/language-reactor/hoombieeljmmljlkjmnheibnpciblicm
+
 
 ## Setup
 

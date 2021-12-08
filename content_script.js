@@ -214,13 +214,28 @@
 
 		console.log("Video URL (and time stamp) =", youtube_share_url)
 
-		// make selected word bold in the subtitles
-		var subtitle = document.getElementsByClassName('lln-subs')[0].innerText.replace(word, "<b>" + word.toLowerCase() + "</b>");
+		// make selected word bold in the subtitles, might not work for all languages :(
+		var subtitle = document.getElementsByClassName('lln-subs')[0].innerText;
+		subtitle = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + word + "</b>");
+
+		// get 2nd language translation (this appears under the main subtitle)
+		// 	this is set with the "Translation language" in the options of LLWYT
+		if (document.getElementsByClassName('lln-whole-title-translation').length)
+		{
+			//"var" is FUNCTION scoped and "let" is BLOCK scoped
+			var subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText;
+			//let subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText.replace('\n', ' ');
+		}
+		else
+		{
+			var subtitle_translation = ""
+		}
 
 		var fields = {
 			"image-filename": '',
 			"image-data": '',
 			"subtitle": subtitle,
+			"suntitle-translation": subtitle_translation,
 			"word": word,
 			"basic-translation": translation,
 			"extra-translation": extra_definitions,
@@ -278,17 +293,28 @@
 
 		console.log("Video URL (and time stamp) =", youtube_share_url)
 
-		// make selected word bold in the subtitles
-		var subtitle = document.getElementsByClassName('lln-subs')[0].innerText.replace(word, "<b>" + word + "</b>");
+		// make selected word bold in the subtitles, might not work for all languages :(
+		var subtitle = document.getElementsByClassName('lln-subs')[0].innerText;
+		subtitle = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + word + "</b>");
 
-		//var notify_div = document.createElement('div')
-		//notify_div.id = "notify"
-		//document.body.append(notify_div)
+		// get 2nd language translation (this appears under the main subtitle)
+		// 	this is set with the "Translation language" in the options of LLWYT
+		if (document.getElementsByClassName('lln-whole-title-translation').length)
+		{
+			//"var" is FUNCTION scoped and "let" is BLOCK scoped
+			var subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText;
+			//let subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText.replace('\n', ' ');
+		}
+		else
+		{
+			var subtitle_translation = ""
+		}
 
 		var fields = {
 			"image-filename": imageFilename,
 			"image-data": dataURL,
 			"subtitle": subtitle,
+			"subtitle-translation": subtitle_translation,
 			"word": word,
 			"basic-translation": translation,
 			"extra-translation": extra_definitions,
@@ -384,9 +410,9 @@
 		console.log(data)
 
 		chrome.storage.local.get(
-			['ankiDeckNameSelected', 'ankiNoteNameSelected', 'ankiFieldScreenshotSelected', 'ankiSubtitleSelected',
+			['ankiDeckNameSelected', 'ankiNoteNameSelected', 'ankiFieldScreenshotSelected', 'ankiSubtitleSelected', 'ankiSubtitleTranslation',
 				'ankiWordSelected', "ankiBasicTranslationSelected", "ankiOtherTranslationSelected", "ankiFieldURL", "ankiConnectUrl"],
-			({ ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected,
+			({ ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected, ankiSubtitleTranslation,
 				ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl }) =>
 			{
 				url = ankiConnectUrl || 'http://localhost:8765';
@@ -395,7 +421,7 @@
 
 				console.log(
 					{
-						ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected,
+						ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected, ankiSubtitleTranslation,
 						ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl
 					}
 				)
@@ -407,6 +433,7 @@
 				var fields = {
 					[ankiFieldScreenshotSelected]: '<img src="' + data['image-filename'] + '" />',
 					[ankiSubtitleSelected]: data['subtitle'],
+					[ankiSubtitleTranslation]: data['subtitle-translation'],
 					[ankiWordSelected]: data['word'],
 					[ankiBasicTranslationSelected]: data['basic-translation'],
 					[ankiOtherTranslationSelected]: data['extra-translation'],

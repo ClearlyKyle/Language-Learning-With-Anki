@@ -194,17 +194,26 @@
 
 		/* Getting translation of the word selected */
 		// make sure the translation language is set to english
-		if (document.getElementsByClassName('lln-dict-contextual').length)
+		const word_element = document.getElementsByClassName('lln-dict-contextual');
+		if (word_element.length)
 		{
-			var word = document.getElementsByClassName('lln-dict-contextual')[0].children[1].innerText;
-			var translation_text = document.getElementsByClassName('lln-dict-contextual')[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
-			var translation_text_without_most_common_number = translation_text.split("\n").slice(1);// removing the 3k, 2k, 4k, from the translation
-			//var translation = translation_text_without_most_common_number.join('\n').replace(/(?:\r\n|\r|\n)/g, '<br>'); // replace line brea '\n' with <br> tag
-			var translation = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
+			if (word_element[0].childElementCount === 4)
+			{
+				var word = word_element[0].children[1].innerText;
+				var translation = word_element[0].children[3].innerText;
+				//var translation_text = word_element[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
+				//var translation_text_without_most_common_number = translation_text.split("\n").slice(1);// removing the 3k, 2k, 4k, from the translation
+				////var translation = translation_text_without_most_common_number.join('\n').replace(/(?:\r\n|\r|\n)/g, '<br>'); // replace line brea '\n' with <br> tag
+				//var translation = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
+			} else if (word_element[0].childElementCount === 3)
+			{
+				var word = word_element[0].children[0].innerText;
+				var translation = word_element[0].children[2].innerText;
+			}
 		} else
 		{
 			var word = ""
-			var translation = ""
+			var translation = "Translation not found"
 		}
 		if (document.getElementsByClassName('lln-dict-section-full').length)
 		{

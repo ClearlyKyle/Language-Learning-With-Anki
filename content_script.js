@@ -245,7 +245,7 @@
 			"image-data": '',
 			"subtitle": subtitle,
 			"suntitle-translation": subtitle_translation,
-			"word": word,
+			"word": word.toLowerCase(), // better here to help with reg
 			"basic-translation": translation,
 			"extra-translation": extra_definitions,
 			"url": '<a href="' + youtube_share_url + '">Video Link</a>'
@@ -324,7 +324,7 @@
 			"image-data": dataURL,
 			"subtitle": subtitle,
 			"subtitle-translation": subtitle_translation,
-			"word": word,
+			"word": word.toLowerCase(), // better here to help with reg
 			"basic-translation": translation,
 			"extra-translation": extra_definitions,
 			"url": '<a href="' + youtube_share_url + '">Video Link</a>'

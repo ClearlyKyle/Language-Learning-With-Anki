@@ -411,6 +411,56 @@
 		SendMessageToBackGround("...all 'onclick' events have been added!")
 	}
 
+	function Highlight_Words()
+	{
+		var subtitle_observer = new MutationObserver(function (mutations)
+		{
+			for (let mutation of mutations)
+			{
+				if (mutation.addedNodes.length === 3)
+					console.log(mutation)
+
+				var words = ["насколько",
+					"и	",
+					"в	",
+					"я	",
+					"что	",
+					"есть",
+					"то	",
+					"здесь",
+					"вот	",
+					"ну	",
+					"очень",
+					"на	",
+					"это	",
+					"город",
+					"потому",
+					"так	",
+					"много",
+					"но	",
+					"москве",
+					"с	",
+					"не"];
+
+				var subtitles = document.getElementsByClassName('lln-subs');
+				subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
+				{
+					if (words.includes(element.innerText.toLowerCase()))
+					{
+						element.style.color = 'CornflowerBlue'; // #6495ED
+					}
+				});
+				break;
+			}
+		});
+		subtitle_observer.observe(document.getElementById('lln-subs-content')[0],
+			{
+				attributes: true,
+				childList: true
+			}
+		);
+	}
+
 	/* ----------------------------------------------------------------------------------------------------------- */
 	function LLW_Send_Data_To_Anki(data)
 	{

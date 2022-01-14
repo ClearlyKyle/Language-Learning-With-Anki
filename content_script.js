@@ -29,6 +29,7 @@
 				SendMessageToBackGround("'.lln-full-dict-wrap' has been found...")
 
 				Add_Functions_To_Side_Bar_Subs();
+				Highlight_Words();
 
 				var dict_wrap_observer = new MutationObserver(function (mutations)
 				{
@@ -411,54 +412,64 @@
 		SendMessageToBackGround("...all 'onclick' events have been added!")
 	}
 
+	function Store_Word_In_Chrome(word_to_store)
+	{
+		// Get the current list of stored words
+		chrome.storage.local.get({ user_saved_words: [] }, function (result)
+		{
+			// Then we add the new word to the current stored list
+			var words = result.user_saved_words;
+			words.push(word_to_store)
+
+			// Save the list back to chrome
+			chrome.storage.local.set({ user_saved_words: words });
+		});
+	}
+
 	function Highlight_Words()
 	{
-		var subtitle_observer = new MutationObserver(function (mutations)
+		var wait_for_subtitles_to_show = setInterval(function ()
 		{
-			for (let mutation of mutations)
+			if (document.getElementById('lln-subs-content'))
 			{
-				if (mutation.addedNodes.length === 3)
-					console.log(mutation)
+				clearInterval(wait_for_subtitles_to_show); // Stop timed interval
 
-				var words = ["насколько",
-					"и	",
-					"в	",
-					"я	",
-					"что	",
-					"есть",
-					"то	",
-					"здесь",
-					"вот	",
-					"ну	",
-					"очень",
-					"на	",
-					"это	",
-					"город",
-					"потому",
-					"так	",
-					"много",
-					"но	",
-					"москве",
-					"с	",
-					"не"];
+				console.log("[Highlight_Words] Highlighting words in subtitle...")
+				SendMessageToBackGround("[Highlight_Words] Highlighting words in subtitle...")
 
-				var subtitles = document.getElementsByClassName('lln-subs');
-				subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
+				var subtitle_observer = new MutationObserver(function (mutations)
 				{
-					if (words.includes(element.innerText.toLowerCase()))
+					for (let mutation of mutations)
 					{
-						element.style.color = 'CornflowerBlue'; // #6495ED
+						if (mutation.addedNodes.length === 3)
+							console.log(mutation)
+
+						// Get saved words
+						chrome.storage.local.get('user_saved_words', function (result)
+						{
+							console.log(result.user_saved_words)
+
+							var words = result.user_saved_words;
+							var subtitles = document.getElementsByClassName('lln-subs');
+							subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
+							{
+								if (words.includes(element.innerText.toLowerCase()))
+								{
+									element.style.color = 'CornflowerBlue'; // #6495ED
+								}
+							});
+						});
+						break;
 					}
 				});
-				break;
+				subtitle_observer.observe(document.getElementById('lln-subs-content'),
+					{
+						attributes: true,
+						childList: true
+					}
+				);
 			}
-		});
-		subtitle_observer.observe(document.getElementById('lln-subs-content')[0],
-			{
-				attributes: true,
-				childList: true
-			}
-		);
+		}, 100);
 	}
 
 	/* ----------------------------------------------------------------------------------------------------------- */
@@ -467,6 +478,9 @@
 		console.log("[LLW_Send_Data_To_Anki] Sending to Anki...")
 		SendMessageToBackGround("[LLW_Send_Data_To_Anki] Sending to Anki...")
 		console.log(data)
+
+		Store_Word_In_Chrome(data['word']);
+		Highlight_Words(); // Update the current subtitle with the newest words saved.
 
 		chrome.storage.local.get(
 			['ankiDeckNameSelected', 'ankiNoteNameSelected', 'ankiFieldScreenshotSelected', 'ankiSubtitleSelected', 'ankiSubtitleTranslation',

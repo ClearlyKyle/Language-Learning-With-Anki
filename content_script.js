@@ -86,7 +86,8 @@
 
 	function Add_Anki_Button_To_Popup_Dictionary()
 	{
-		let btn_location = document.getElementsByClassName('lln-external-dicts-container')[0];
+		const btn_location = document.getElementsByClassName('lln-external-dicts-container')[0];
+		const highlight_location = document.getElementsByClassName('lln-word-save-buttons-wrap')[0];
 
 		/* create Anki Button */
 		let anki_div = document.createElement("div");
@@ -94,16 +95,91 @@
 		anki_div.innerHTML = "Anki";
 		anki_div.setAttribute("data-tippy-content", "Send to Anki");
 
+		/* create Remove Highlighted word Button */
+		let remove_highlight = document.createElement("div");
+		remove_highlight.className = "remove_highlight-btn lln-external-dict-btn tippy";
+		remove_highlight.innerHTML = "RC";
+		remove_highlight.setAttribute("data-tippy-content", "Remove word from being highlighted");
+
 		// HANDLE SIDE BAR DICT
 		if (document.querySelector('.lln-full-dict.right') != null)
+		{
 			anki_div.onclick = Handle_Side_Bar_Dictionary;
+			remove_highlight.onclick = Remove_Word_From_Highlight_List;
+		}
+
 		// HANDLE SUBTITLE DICT
 		else if (document.querySelector('.lln-full-dict') != null)
+		{
 			anki_div.onclick = Handle_Subtitle_Dictionary;
+			remove_highlight.onclick = Remove_Word_From_Highlight_List;
+		}
 
-		btn_location.appendChild(anki_div)
+		// Get currently clicked word..
+		const word_element = document.getElementsByClassName('lln-dict-contextual');
+		if (word_element.length) // If there is a valid word to store then add buttons
+		{
+			btn_location.append(anki_div, remove_highlight)
+			//btn_location.appendChild(remove_highlight)
+		}
+		else
+		{
+			console.log("[Add_Anki_Button_To_Popup_Dictionary] No word to save")
+			SendMessageToBackGround("[Add_Anki_Button_To_Popup_Dictionary] No word to save")
+			return
+		}
 
 		SendMessageToBackGround("Boom! Button has been added!")
+	}
+
+	function Remove_Word_From_Highlight_List()
+	{
+		console.log("[Remove_Word_From_Highlight_List] Get current word and remove from saved list of words")
+		SendMessageToBackGround("[Remove_Word_From_Highlight_List] Get current word and remove from saved list of words")
+
+		// Get currently clicked word..
+		const word_element = document.getElementsByClassName('lln-dict-contextual');
+		if (word_element.length)
+		{
+			if (word_element[0].childElementCount === 4)
+			{
+				var word = word_element[0].children[1].innerText;
+			} else if (word_element[0].childElementCount === 3)
+			{
+				var word = word_element[0].children[0].innerText;
+			}
+		} else
+		{
+			console.log("[Remove_Word_From_Highlight_List] Cannot get word from subtitle")
+			SendMessageToBackGround("[Remove_Word_From_Highlight_List] Cannot get word from subtitle")
+			return
+		}
+
+		// Get the current list of stored words
+		if (word !== "")
+		{
+			chrome.storage.local.get({ user_saved_words: [] }, function (result)
+			{
+				// Then we add the new word to the current stored list
+				var words = result.user_saved_words;
+				console.log(word)
+				console.log(words)
+				//words.remove(word.toLowerCase())
+
+				const index = words.indexOf(word.toLowerCase());
+				if (index > -1)
+				{
+					words.splice(index, 1);
+				}
+				console.log(words)
+
+				// Save the list back to chrome
+				chrome.storage.local.set({ user_saved_words: words }, () =>
+				{
+					Update_Subtitle_Highlighting_Words();
+				});
+			});
+		}
 	}
 
 	function Handle_Side_Bar_Dictionary()
@@ -419,10 +495,13 @@
 		{
 			// Then we add the new word to the current stored list
 			var words = result.user_saved_words;
-			words.push(word_to_store)
+			words.push(word_to_store.toLowerCase())
 
 			// Save the list back to chrome
-			chrome.storage.local.set({ user_saved_words: words });
+			chrome.storage.local.set({ user_saved_words: words }, () =>
+			{
+				Update_Subtitle_Highlighting_Words(); // Update the current subtitle with the newest words saved.
+			});
 		});
 	}
 
@@ -444,21 +523,8 @@
 						if (mutation.addedNodes.length === 3)
 							console.log(mutation)
 
-						// Get saved words
-						chrome.storage.local.get('user_saved_words', function (result)
-						{
-							console.log(result.user_saved_words)
+						Update_Subtitle_Highlighting_Words()
 
-							var words = result.user_saved_words;
-							var subtitles = document.getElementsByClassName('lln-subs');
-							subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
-							{
-								if (words.includes(element.innerText.toLowerCase()))
-								{
-									element.style.color = 'CornflowerBlue'; // #6495ED
-								}
-							});
-						});
 						break;
 					}
 				});
@@ -472,6 +538,29 @@
 		}, 100);
 	}
 
+	function Update_Subtitle_Highlighting_Words()
+	{
+		// Get saved words
+		chrome.storage.local.get('user_saved_words', function (result)
+		{
+			console.log(result.user_saved_words)
+
+			var words = result.user_saved_words;
+			var subtitles = document.getElementsByClassName('lln-subs');
+			subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
+			{
+				if (words.includes(element.innerText.toLowerCase()))
+				{
+					element.style.color = 'LightCoral'; // #F08080
+				}
+				else // This is needed for when we remove our modidied colours, it will return back to default
+				{
+					element.style.color = '';
+				}
+			});
+		});
+	}
+
 	/* ----------------------------------------------------------------------------------------------------------- */
 	function LLW_Send_Data_To_Anki(data)
 	{
@@ -480,7 +569,6 @@
 		console.log(data)
 
 		Store_Word_In_Chrome(data['word']);
-		Highlight_Words(); // Update the current subtitle with the newest words saved.
 
 		chrome.storage.local.get(
 			['ankiDeckNameSelected', 'ankiNoteNameSelected', 'ankiFieldScreenshotSelected', 'ankiSubtitleSelected', 'ankiSubtitleTranslation',

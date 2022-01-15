@@ -18,12 +18,14 @@ label {
 
 label span {
   display: inline-block;
+  vertical-align: middle;
   text-align: right;
   width: 90px;
 }
 
 select {
   width: 190px;
+  vertical-align: middle;
   margin-left: 10px;
   height: 20px;
 }
@@ -38,4 +40,20 @@ select {
   display: block;
   width: 100px;
   margin: 0 auto;
+}
+
+#ankiHighLightColour {
+  display: inline-block;
+  width: 100px;
+  margin: 0 auto;
+}
+
+#ankiHighLightSavedWords {
+  display: inline-block;
+  width: 100px;
+  margin: 0 auto;
+}
+
+#highlightSpan {
+  margin-top: -10;
 }

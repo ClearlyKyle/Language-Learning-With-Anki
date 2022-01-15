@@ -39,11 +39,36 @@ var saveOption = function (selectId)
 	return chrome.storage.local.set({ [selectId]: selectEl.value })
 }
 
+function Show_Colour_Options()
+{
+	chrome.storage.local.get(["ankiHighLightSavedWords", "ankiHighLightColour"], ({ ankiHighLightSavedWords, ankiHighLightColour }) =>
+	{
+		console.log(ankiHighLightSavedWords)
+		console.log(ankiHighLightColour)
+		document.getElementById("ankiHighLightSavedWords").checked = ankiHighLightSavedWords;
+		document.getElementById("ankiHighLightColour").value = ankiHighLightColour;
+	})
+}
+
+function Set_Colour_Options()
+{
+	var high_check_state = document.getElementById("ankiHighLightSavedWords").checked
+	var high_colour_value = document.getElementById("ankiHighLightColour").value
+
+	console.log("Setting colour options...")
+	console.log(high_check_state)
+	console.log(high_colour_value)
+
+	return chrome.storage.local.set({ ["ankiHighLightSavedWords"]: high_check_state, ["ankiHighLightColour"]: high_colour_value })
+}
+
 document.addEventListener("DOMContentLoaded", function ()
 {
 	var urlEl = document.getElementById('ankiConnectUrl');
 	var model_Name = document.getElementById('ankiNoteNameSelected');
 	var submit_button = document.getElementById('saveAnkiBtn');
+
+	Show_Colour_Options()
 
 	chrome.storage.local.get('ankiConnectUrl', ({ ankiConnectUrl }) =>
 	{
@@ -104,6 +129,8 @@ document.addEventListener("DOMContentLoaded", function ()
 					saveOption('ankiBasicTranslationSelected'),
 					saveOption('ankiOtherTranslationSelected'),
 					saveOption('ankiFieldURL'),
+
+					Set_Colour_Options(),
 				])
 					.then(() => alert(`Options saved!`))
 					.catch(error => alert(`Cannot save options: ${error}`))

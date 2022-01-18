@@ -540,18 +540,22 @@
 
 	function Update_Subtitle_Highlighting_Words()
 	{
-		// Get saved words
-		chrome.storage.local.get('user_saved_words', function (result)
-		{
-			console.log(result.user_saved_words)
+		console.log("[Update_Subtitle_Highlighting_Words]")
 
-			var words = result.user_saved_words;
+		// Get saved words
+		chrome.storage.local.get(['user_saved_words', 'ankiHighLightColour', 'ankiHighLightSavedWords'], function ({ user_saved_words, ankiHighLightColour, ankiHighLightSavedWords })
+		{
+			console.log(ankiHighLightSavedWords)
+			if (ankiHighLightSavedWords === false) // dont highlight words
+				return;
+
 			var subtitles = document.getElementsByClassName('lln-subs');
 			subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
 			{
-				if (words.includes(element.innerText.toLowerCase()))
+				if (user_saved_words.includes(element.innerText.toLowerCase()))
 				{
-					element.style.color = 'LightCoral'; // #F08080
+					//element.style.color = 'LightCoral'; // #F08080
+					element.style.color = ankiHighLightColour;
 				}
 				else // This is needed for when we remove our modidied colours, it will return back to default
 				{

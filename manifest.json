@@ -1,36 +1,33 @@
 {
-  "manifest_version": 2,
-  "name": "LLW to Anki",
-  "description": "SAve words from LLW and send to Anki",
-  "version": "1.0",
-  "author": "@clearlykyle",
-  "permissions": [
-    "storage"
-  ],
-  "content_scripts": [
-    {
-      "all_frames": true,
-      "js": [
-        "content_script.js",
-        "resources/toastify.js"
-      ],
-      "css": [
-        "resources/toastify.css"
-      ],
-      "matches": [
-        "*://*.youtube.com/watch*"
-      ],
-      "run_at": "document_end"
-    }
-  ],
-  "browser_action": {
-    "default_title": "LLW to Anki",
-    "default_popup": "popup/popup.html"
-  },
-  "background": {
-    "scripts": [
-      "background.js"
+    "manifest_version": 3,
+    "name": "LLW to Anki",
+    "description": "SAve words from LLW and send to Anki",
+    "version": "1.0",
+    "author": "@clearlykyle",
+    "permissions": [
+        "storage"
     ],
-    "persistent": true
-  }
+    "content_scripts": [
+        {
+            "all_frames": true,
+            "js": [
+                "content_script.js",
+                "resources/toastify.js"
+            ],
+            "css": [
+                "resources/toastify.css"
+            ],
+            "matches": [
+                "*://*.youtube.com/watch*"
+            ],
+            "run_at": "document_end"
+        }
+    ],
+    "action": {
+        "default_title": "LLW to Anki",
+        "default_popup": "popup/popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    }
 }

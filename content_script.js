@@ -1,3 +1,5 @@
+// https://youtu.be/IssktiZ_5Pk?t=403 неочевидна - doesnt get the selected word
+
 (function ()
 {
 	/* This runs on all "youtube.com/watch" web pages */
@@ -396,6 +398,32 @@
 			var subtitle_translation = ""
 		}
 
+		// Getting Example sentences 
+		var CurrentSubs = true;
+		var Tatoeba = false;
+		// There are two sets of example sentences, so we can choose between which set we want
+		// TODO : default to one or none if there is nothing
+		if (CurrentSubs === true)
+		{
+			var current_or_tatoeba = 0;
+		}
+		else if (Tatoeba === true)
+		{
+			var current_or_tatoeba = 1;
+		}
+
+		var example_sentences = "";
+		if (document.getElementsByClassName('lln-word-examples').length)
+		{
+			const all_examples = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba].children;
+			for (var i = 1; i != all_examples.length; i++)
+			{
+				example_sentences += all_examples[i].innerText + "\n"
+			}
+		}
+
+		console.log({ example_sentences })
+
 		var fields = {
 			"image-filename": imageFilename,
 			"image-data": dataURL,
@@ -404,8 +432,11 @@
 			"word": word.toLowerCase(), // better here to help with reg
 			"basic-translation": translation,
 			"extra-translation": extra_definitions,
-			"url": '<a href="' + youtube_share_url + '">Video Link</a>'
+			"url": '<a href="' + youtube_share_url + '">Video Link</a>',
+			"example-sentences": example_sentences
 		};
+
+		console.log({ fields });
 
 		LLW_Send_Data_To_Anki(fields);
 	}
@@ -576,9 +607,9 @@
 
 		chrome.storage.local.get(
 			['ankiDeckNameSelected', 'ankiNoteNameSelected', 'ankiFieldScreenshotSelected', 'ankiSubtitleSelected', 'ankiSubtitleTranslation',
-				'ankiWordSelected', "ankiBasicTranslationSelected", "ankiOtherTranslationSelected", "ankiFieldURL", "ankiConnectUrl"],
+				'ankiWordSelected', "ankiBasicTranslationSelected", "ankiOtherTranslationSelected", "ankiFieldURL", "ankiConnectUrl", "ankiExampleSentences"],
 			({ ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected, ankiSubtitleTranslation,
-				ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl }) =>
+				ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl, ankiExampleSentences }) =>
 			{
 				url = ankiConnectUrl || 'http://localhost:8765';
 				model = ankiNoteNameSelected || 'Basic';
@@ -587,7 +618,7 @@
 				console.log(
 					{
 						ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected, ankiSubtitleTranslation,
-						ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl
+						ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl, ankiExampleSentences
 					}
 				)
 
@@ -602,7 +633,8 @@
 					[ankiWordSelected]: data['word'],
 					[ankiBasicTranslationSelected]: data['basic-translation'],
 					[ankiOtherTranslationSelected]: data['extra-translation'],
-					[ankiFieldURL]: data['url']
+					[ankiFieldURL]: data['url'],
+					"Examples": data['example-sentences']
 				};
 
 				console.log(fields)

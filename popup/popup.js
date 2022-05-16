@@ -7,7 +7,6 @@ var fetchOptions = function (selectId, url, action, params = {})
 	{
 		chrome.storage.local.get(selectId, (stored) =>
 		{
-
 			var storedVal = stored[selectId] || 'Basic';
 
 			fetch(url, { method: "POST", body: JSON.stringify({ "action": action, "params": params }) }).then(r => r.json()).then(data =>
@@ -36,6 +35,7 @@ var fetchOptions = function (selectId, url, action, params = {})
 var saveOption = function (selectId)
 {
 	var selectEl = document.getElementById(selectId);
+	console.log('saveOption', selectEl.value)
 	return chrome.storage.local.set({ [selectId]: selectEl.value })
 }
 
@@ -95,9 +95,14 @@ document.addEventListener("DOMContentLoaded", function ()
 			fetchOptions('ankiOtherTranslationSelected', url, 'modelFieldNames', { "modelName": model_Name_value })
 			fetchOptions('ankiFieldURL', url, 'modelFieldNames', { "modelName": model_Name_value })
 
+			chrome.storage.local.get(["ankiExampleSentences"], ({ ankiExampleSentences }) =>
+			{
+				console.log('ankiExampleSentences, stored value : ', ankiExampleSentences)
+				document.getElementById("ankiExampleSentences").value = ankiExampleSentences;
+			});
+
 			model_Name.addEventListener("change", function ()
 			{
-
 				var array = ["ankiFieldScreenshotSelected",
 					"ankiSubtitleSelected",
 					"ankiSubtitleTranslation",
@@ -129,6 +134,8 @@ document.addEventListener("DOMContentLoaded", function ()
 					saveOption('ankiBasicTranslationSelected'),
 					saveOption('ankiOtherTranslationSelected'),
 					saveOption('ankiFieldURL'),
+
+					saveOption('ankiExampleSentences'),
 
 					Set_Colour_Options(),
 				])

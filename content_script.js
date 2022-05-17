@@ -319,18 +319,46 @@
 			var subtitle_translation = ""
 		}
 
-		var fields = {
-			"image-filename": '',
-			"image-data": '',
-			"subtitle": subtitle,
-			"suntitle-translation": subtitle_translation,
-			"word": word.toLowerCase(), // better here to help with reg
-			"basic-translation": translation,
-			"extra-translation": extra_definitions,
-			"url": '<a href="' + youtube_share_url + '">Video Link</a>'
-		};
+		chrome.storage.local.get("ankiExampleSentences", (res) =>
+		{
+			// Getting Example sentences 
+			// There are two sets of example sentences, so we can choose between which set we want
+			// TODO : default to one or none if there is nothing
+			var example_sentences = "";
+			if (document.getElementsByClassName('lln-word-examples').length)
+			{
+				if (res === "Current")
+					var current_or_tatoeba = 0;
+				else if (res === "Tatoeba")
+					var current_or_tatoeba = 1;
+				else
+					console.log("something wrong with example selecting")
 
-		return fields;
+				const all_examples = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba].children;
+				for (var i = 1; i != all_examples.length; i++)
+				{
+					example_sentences += all_examples[i].innerText + "\n"
+				}
+			}
+			console.log({ example_sentences })
+
+			var fields = {
+				"image-filename": imageFilename,
+				"image-data": dataURL,
+				"subtitle": subtitle,
+				"subtitle-translation": subtitle_translation,
+				"word": word.toLowerCase(), // better here to help with reg
+				"basic-translation": translation,
+				"extra-translation": extra_definitions,
+				"url": '<a href="' + youtube_share_url + '">Video Link</a>',
+				"example-sentences": example_sentences
+			};
+
+			console.log({ fields });
+
+			return fields;
+		});
+
 	}
 
 	function Subtitle_Dictionary_GetData()
@@ -398,47 +426,45 @@
 			var subtitle_translation = ""
 		}
 
-		// Getting Example sentences 
-		var CurrentSubs = true;
-		var Tatoeba = false;
-		// There are two sets of example sentences, so we can choose between which set we want
-		// TODO : default to one or none if there is nothing
-		if (CurrentSubs === true)
+		chrome.storage.local.get("ankiExampleSentences", (res) =>
 		{
-			var current_or_tatoeba = 0;
-		}
-		else if (Tatoeba === true)
-		{
-			var current_or_tatoeba = 1;
-		}
-
-		var example_sentences = "";
-		if (document.getElementsByClassName('lln-word-examples').length)
-		{
-			const all_examples = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba].children;
-			for (var i = 1; i != all_examples.length; i++)
+			// Getting Example sentences 
+			// There are two sets of example sentences, so we can choose between which set we want
+			// TODO : default to one or none if there is nothing
+			var example_sentences = "";
+			if (document.getElementsByClassName('lln-word-examples').length)
 			{
-				example_sentences += all_examples[i].innerText + "\n"
+				if (res === "Current")
+					var current_or_tatoeba = 0;
+				else if (res === "Tatoeba")
+					var current_or_tatoeba = 1;
+				else
+					console.log("something wrong with example selecting")
+
+				const all_examples = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba].children;
+				for (var i = 1; i != all_examples.length; i++)
+				{
+					example_sentences += all_examples[i].innerText + "\n"
+				}
 			}
-		}
+			console.log({ example_sentences })
 
-		console.log({ example_sentences })
+			var fields = {
+				"image-filename": imageFilename,
+				"image-data": dataURL,
+				"subtitle": subtitle,
+				"subtitle-translation": subtitle_translation,
+				"word": word.toLowerCase(), // better here to help with reg
+				"basic-translation": translation,
+				"extra-translation": extra_definitions,
+				"url": '<a href="' + youtube_share_url + '">Video Link</a>',
+				"example-sentences": example_sentences
+			};
 
-		var fields = {
-			"image-filename": imageFilename,
-			"image-data": dataURL,
-			"subtitle": subtitle,
-			"subtitle-translation": subtitle_translation,
-			"word": word.toLowerCase(), // better here to help with reg
-			"basic-translation": translation,
-			"extra-translation": extra_definitions,
-			"url": '<a href="' + youtube_share_url + '">Video Link</a>',
-			"example-sentences": example_sentences
-		};
+			console.log({ fields });
 
-		console.log({ fields });
-
-		LLW_Send_Data_To_Anki(fields);
+			LLW_Send_Data_To_Anki(fields);
+		});
 	}
 
 	function Add_Functions_To_Side_Bar_Subs()

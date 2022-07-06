@@ -426,25 +426,22 @@
             var subtitle_translation = ""
         }
 
-        chrome.storage.local.get("ankiExampleSentences", (res) =>
+        chrome.storage.local.get("ankiExampleSentences", ({ ankiExampleSentences }) =>
         {
+            console.log("Getting example setting toggle: ", ankiExampleSentences)
             // Getting Example sentences 
             // There are two sets of example sentences, so we can choose between which set we want
             // TODO : default to one or none if there is nothing
             var example_sentences = "";
             if (document.getElementsByClassName('lln-word-examples').length)
             {
-                if (res === "Current")
-                    var current_or_tatoeba = 0;
-                else if (res === "Tatoeba")
-                    var current_or_tatoeba = 1;
-                else
-                    console.log("something wrong with example selecting")
+                // We default to using current
+                const current_or_tatoeba = ankiExampleSentences === "Tatoeba" ? 1 : 0;
 
                 const all_examples = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba].children;
                 for (var i = 1; i != all_examples.length; i++)
                 {
-                    example_sentences += all_examples[i].innerText + "\n"
+                    example_sentences += all_examples[i].innerText + "<br>";
                 }
             }
             console.log({ example_sentences })

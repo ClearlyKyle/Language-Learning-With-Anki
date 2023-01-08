@@ -601,14 +601,16 @@
         {
             console.log("[Update_Subtitle_Highlighting_Words] Getting saved words...")
             console.log(user_saved_words)
-            console.log(ankiHighLightColour)
-            console.log(ankiHighLightSavedWords)
+            //console.log(ankiHighLightColour)
+            //console.log(ankiHighLightSavedWords)
 
             // dont highlight if there are no words, or the option to no highlight is set
             if (!user_saved_words || ankiHighLightSavedWords === false)
                 return;
 
             var subtitles = document.getElementsByClassName('lln-subs');
+            if (subtitles.length > 0)
+            {
             subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
             {
                 if (user_saved_words.includes(element.innerText.toLowerCase()))
@@ -621,6 +623,7 @@
                     element.style.color = '';
                 }
             });
+            }
         });
     }
 

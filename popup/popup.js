@@ -92,13 +92,14 @@ document.addEventListener("DOMContentLoaded", function ()
 			fetchOptions('ankiSubtitleTranslation', url, 'modelFieldNames', { "modelName": model_Name_value })
 			fetchOptions('ankiWordSelected', url, 'modelFieldNames', { "modelName": model_Name_value })
 			fetchOptions('ankiBasicTranslationSelected', url, 'modelFieldNames', { "modelName": model_Name_value })
+			fetchOptions('ankiExampleSentencesSelected', url, 'modelFieldNames', { "modelName": model_Name_value })
 			fetchOptions('ankiOtherTranslationSelected', url, 'modelFieldNames', { "modelName": model_Name_value })
 			fetchOptions('ankiFieldURL', url, 'modelFieldNames', { "modelName": model_Name_value })
 
-			chrome.storage.local.get(["ankiExampleSentences"], ({ ankiExampleSentences }) =>
+			chrome.storage.local.get(["ankiExampleSentenceSource"], ({ ankiExampleSentenceSource }) =>
 			{
-				console.log('ankiExampleSentences, stored value : ', ankiExampleSentences)
-				document.getElementById("ankiExampleSentences").value = ankiExampleSentences;
+				console.log('ankiExampleSentenceSource, stored value : ', ankiExampleSentenceSource)
+				document.getElementById("ankiExampleSentenceSource").value = ankiExampleSentenceSource;
 			});
 
 			model_Name.addEventListener("change", function ()
@@ -108,6 +109,7 @@ document.addEventListener("DOMContentLoaded", function ()
 					"ankiSubtitleTranslation",
 					"ankiWordSelected",
 					"ankiBasicTranslationSelected",
+                    "ankiExampleSentencesSelected",
 					"ankiOtherTranslationSelected",
 					"ankiFieldURL"
 				];
@@ -132,10 +134,11 @@ document.addEventListener("DOMContentLoaded", function ()
 					saveOption('ankiSubtitleTranslation'),
 					saveOption('ankiWordSelected'),
 					saveOption('ankiBasicTranslationSelected'),
+					saveOption('ankiExampleSentencesSelected'),
 					saveOption('ankiOtherTranslationSelected'),
 					saveOption('ankiFieldURL'),
 
-					saveOption('ankiExampleSentences'),
+					saveOption('ankiExampleSentenceSource'),
 
 					Set_Colour_Options(),
 				])

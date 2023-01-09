@@ -19,8 +19,9 @@ Language Reactor can be found here:
 
 Click a word to bring up the definition popup.
 Clicking the Anki button will send the current word and definition straight to Anki.
+Also, the "RC" option, will remove the colour from the selected word
 
-![bubble-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/popup.PNG)
+![bubble-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/screenshots/popup.PNG)
 
 ## Settings
 
@@ -28,11 +29,15 @@ Exported data fields:
 
  1) `Screenshot` - an image of video taken at time when button is pressed
  2) `Subtitle` - the current subtitle visible on screen
- 3) `Word` - selected word
- 4) `Basic Translation` - the transaltion of the selected word
- 5) `Other Translation` - the extra translations of the word, formatted in HTML
- 6) `(URL)` - URL of current video with the current timestamp
+ 3) `Subtitle Translation` - this is the translated subtitle when using the 'Show machine translation' option
+ 4) `Word` - selected word in the subtitle
+ 5) `Basic Translation` - the transaltion of the selected word
+ 6) `Example Sentences` - examaples bellow the definitons in the popup, either from current video or Tatoeba
+ 7) `Example Source`  - Tatoeba or Current video
+ 8) `Other Translation` - the extra translations of the word, formatted in HTML
+ 9) `(URL)` - URL of current video with the current timestamp
+ 10) `Highlight` - toggle wether to highlight words exported to Anki in the choosen colour
 
 Settings allow you to choose which fields are filled with what data. A blank options means that data is skipped
 
-![options-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/settings.PNG)
+![options-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/screenshots/settings.PNG)

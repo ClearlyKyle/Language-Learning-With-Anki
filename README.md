@@ -40,4 +40,4 @@ Exported data fields:
 
 Settings allow you to choose which fields are filled with what data. A blank options means that data is skipped
 
-![options-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/screenshots/settings.PNG)
+![options-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/screenshots/settings.png)

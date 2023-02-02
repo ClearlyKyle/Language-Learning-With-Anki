@@ -332,10 +332,14 @@
                 else
                     console.log("something wrong with example selecting")
 
-                const all_examples = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba].children;
-                for (var i = 1; i != all_examples.length; i++)
+                const example_sentences_element = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba];
+                if (example_sentences_element)
                 {
-                    example_sentences += all_examples[i].innerText + "\n"
+                    const all_examples = example_sentences_element.children;
+                    for (var i = 1; i != all_examples.length; i++)
+                    {
+                        example_sentences += all_examples[i].innerText + "\n"
+                    }
                 }
             }
             console.log({ example_sentences })

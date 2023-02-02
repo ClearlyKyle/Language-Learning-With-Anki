@@ -43,8 +43,9 @@ function Show_Colour_Options()
 {
 	chrome.storage.local.get(["ankiHighLightSavedWords", "ankiHighLightColour"], ({ ankiHighLightSavedWords, ankiHighLightColour }) =>
 	{
-		console.log(ankiHighLightSavedWords)
-		console.log(ankiHighLightColour)
+		console.log("Stored Highlight colour : ", ankiHighLightColour)
+		console.log("Stored Highlight colour toggle : ", ankiHighLightSavedWords)
+
 		document.getElementById("ankiHighLightSavedWords").checked = ankiHighLightSavedWords;
 		document.getElementById("ankiHighLightColour").value = ankiHighLightColour;
 	})
@@ -109,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function ()
 					"ankiSubtitleTranslation",
 					"ankiWordSelected",
 					"ankiBasicTranslationSelected",
-                    "ankiExampleSentencesSelected",
+					"ankiExampleSentencesSelected",
 					"ankiOtherTranslationSelected",
 					"ankiFieldURL"
 				];

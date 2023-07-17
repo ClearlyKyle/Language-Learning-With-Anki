@@ -5,14 +5,6 @@
     /* This runs on all "youtube.com/watch" web pages */
     console.log("----- [content_script.js] LOADED");
 
-    function SendMessageToBackGround(text)
-    {
-        // send sucess message to background
-        chrome.runtime.sendMessage({
-            message: text
-        });
-    }
-
     /* YOUTUBE */
     if (window.location.href.includes("youtube.com/watch"))
     {
@@ -217,7 +209,6 @@
         SendMessageToBackGround("[HandleSideBar] pause the video!")
         video.pause();
 
-        // setTimeout allows us to run a function once after the interval of time.
         var checkExist = setInterval(function ()
         {
             //your code to be executed after X ms
@@ -342,7 +333,7 @@
             }
             console.log({ example_sentences })
 
-            var fields = {
+            const fields = {
                 "image-filename": imageFilename,
                 "image-data": dataURL,
                 "subtitle": subtitle,
@@ -359,6 +350,17 @@
             return fields;
         });
 
+    }
+
+    function Get_YouTube_VideoID()
+    {
+        var video_id = window.location.search.split('v=')[1];
+        var ampersandPosition = video_id.indexOf('&');
+        if (ampersandPosition != -1)
+        {
+            return video_id.substring(0, ampersandPosition);
+        }
+        return "FailedToGetID"
     }
 
     function Subtitle_Dictionary_GetData()
@@ -380,7 +382,7 @@
         dataURL = dataURL.replace(/^data:image\/(png|jpg);base64,/, "")
 
         /* making time stamped url */
-        var videoId = document.querySelectorAll('[itemprop="videoId"]')[0].content;
+        var videoId = Get_YouTube_VideoID();
         var current_time = document.querySelector(".video-stream").currentTime.toFixed();
         var youtube_share_url = "https://youtu.be/" + videoId + "?t=" + current_time; /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
 
@@ -715,12 +717,12 @@
                             {
                                 console.log("Fetch Return:")
                                 console.log(data)
-                                if (data.result === null)
+                                if (data.length > 1)
                                 {
                                     // https://jsfiddle.net/2qasgcfd/3/
                                     // https://github.com/apvarun/toastify-js
-                                    ShowErrorMessage("Error! " + error);
-                                    return
+                                    if (data[1].result === null)
+                                        ShowErrorMessage("Error! " + data[1].error);
                                 }
                                 else
                                 {

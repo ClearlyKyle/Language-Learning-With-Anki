@@ -310,7 +310,7 @@
             var subtitle_translation = ""
         }
 
-        chrome.storage.local.get("ankiExampleSentences", (res) =>
+        chrome.storage.local.get("ankiExampleSentenceSource", (res) =>
         {
             // Getting Example sentences 
             // There are two sets of example sentences, so we can choose between which set we want
@@ -325,10 +325,14 @@
                 else
                     console.log("something wrong with example selecting")
 
-                const all_examples = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba].children;
-                for (var i = 1; i != all_examples.length; i++)
+                const example_sentences_element = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba];
+                if (example_sentences_element)
                 {
-                    example_sentences += all_examples[i].innerText + "\n"
+                    const all_examples = example_sentences_element.children;
+                    for (var i = 1; i != all_examples.length; i++)
+                    {
+                        example_sentences += all_examples[i].innerText + "\n"
+                    }
                 }
             }
             console.log({ example_sentences })
@@ -428,9 +432,9 @@
             var subtitle_translation = ""
         }
 
-        chrome.storage.local.get("ankiExampleSentences", ({ ankiExampleSentences }) =>
+        chrome.storage.local.get("ankiExampleSentenceSource", ({ ankiExampleSentenceSource }) =>
         {
-            console.log("Getting example setting toggle: ", ankiExampleSentences)
+            console.log("Getting example setting toggle: ", ankiExampleSentenceSource)
             // Getting Example sentences 
             // There are two sets of example sentences, so we can choose between which set we want
             // TODO : default to one or none if there is nothing
@@ -438,7 +442,7 @@
             if (document.getElementsByClassName('lln-word-examples').length)
             {
                 // We default to using current
-                const current_or_tatoeba = ankiExampleSentences === "Tatoeba" ? 1 : 0;
+                const current_or_tatoeba = ankiExampleSentenceSource === "Tatoeba" ? 1 : 0;
 
                 const all_examples = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba].children;
                 for (var i = 1; i != all_examples.length; i++)
@@ -474,8 +478,7 @@
         // setInterval allows us to run a function repeatedly, starting after the interval of time, then repeating continuously at that interval.
         var wait_for_all_subtitles_to_be_loaded = setInterval(function () 
         {
-            SendMessageToBackGround(document.getElementById('lln-vertical-view-subs').children.length)
-            if (document.getElementById('lln-vertical-view-subs').children.length > 1)
+            if (document.getElementById('lln-vertical-view-subs') && document.getElementById('lln-vertical-view-subs').children.length > 1)
             {
                 clearInterval(wait_for_all_subtitles_to_be_loaded);
 
@@ -570,23 +573,22 @@
                 clearInterval(wait_for_subtitles_to_show); // Stop timed interval
 
                 console.log("[Highlight_Words] Highlighting words in subtitle...")
-                SendMessageToBackGround("[Highlight_Words] Highlighting words in subtitle...")
 
                 var subtitle_observer = new MutationObserver(function (mutations)
                 {
                     for (let mutation of mutations)
                     {
                         if (mutation.addedNodes.length === 3)
+                        {
                             console.log(mutation)
-
-                        Update_Subtitle_Highlighting_Words()
-
+                            Update_Subtitle_Highlighting_Words()
+                        }
                         break;
                     }
                 });
                 subtitle_observer.observe(document.getElementById('lln-subs-content'),
                     {
-                        attributes: true,
+                        //attributes: true,
                         childList: true
                     }
                 );
@@ -603,26 +605,29 @@
         {
             console.log("[Update_Subtitle_Highlighting_Words] Getting saved words...")
             console.log(user_saved_words)
-            console.log(ankiHighLightColour)
-            console.log(ankiHighLightSavedWords)
+            //console.log(ankiHighLightColour)
+            //console.log(ankiHighLightSavedWords)
 
             // dont highlight if there are no words, or the option to no highlight is set
             if (!user_saved_words || ankiHighLightSavedWords === false)
                 return;
 
             var subtitles = document.getElementsByClassName('lln-subs');
-            subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
+            if (subtitles.length > 0)
             {
-                if (user_saved_words.includes(element.innerText.toLowerCase()))
+                subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
                 {
-                    //element.style.color = 'LightCoral'; // #F08080
-                    element.style.color = ankiHighLightColour;
-                }
-                else // This is needed for when we remove our modidied colours, it will return back to default
-                {
-                    element.style.color = '';
-                }
-            });
+                    if (user_saved_words.includes(element.innerText.toLowerCase()))
+                    {
+                        //element.style.color = 'LightCoral'; // #F08080
+                        element.style.color = ankiHighLightColour;
+                    }
+                    else // This is needed for when we remove our modidied colours, it will return back to default
+                    {
+                        element.style.color = '';
+                    }
+                });
+            }
         });
     }
 
@@ -637,9 +642,9 @@
 
         chrome.storage.local.get(
             ['ankiDeckNameSelected', 'ankiNoteNameSelected', 'ankiFieldScreenshotSelected', 'ankiSubtitleSelected', 'ankiSubtitleTranslation',
-                'ankiWordSelected', "ankiBasicTranslationSelected", "ankiOtherTranslationSelected", "ankiFieldURL", "ankiConnectUrl", "ankiExampleSentences"],
+                'ankiWordSelected', "ankiBasicTranslationSelected", "ankiExampleSentencesSelected", "ankiOtherTranslationSelected", "ankiFieldURL", "ankiConnectUrl", "ankiExampleSentenceSource"],
             ({ ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected, ankiSubtitleTranslation,
-                ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl, ankiExampleSentences }) =>
+                ankiWordSelected, ankiBasicTranslationSelected, ankiExampleSentencesSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl, ankiExampleSentenceSource }) =>
             {
                 url = ankiConnectUrl || 'http://localhost:8765';
                 model = ankiNoteNameSelected || 'Basic';
@@ -648,7 +653,8 @@
                 console.log(
                     {
                         ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected, ankiSubtitleTranslation,
-                        ankiWordSelected, ankiBasicTranslationSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl, ankiExampleSentences
+                        ankiWordSelected, ankiBasicTranslationSelected, ankiExampleSentencesSelected, ankiOtherTranslationSelected, ankiFieldURL,
+                        ankiConnectUrl, ankiExampleSentenceSource
                     }
                 )
 
@@ -664,7 +670,7 @@
                     [ankiBasicTranslationSelected]: data['basic-translation'],
                     [ankiOtherTranslationSelected]: data['extra-translation'],
                     [ankiFieldURL]: data['url'],
-                    "Examples": data['example-sentences']
+                    [ankiExampleSentencesSelected]: data['example-sentences']
                 };
 
                 console.log(fields)
@@ -756,8 +762,8 @@
                 background: "light blue",
             }
         }).showToast();
-        //console.log(message);
-        SendMessageToBackGround(message);
+        console.log(message);
+        //SendMessageToBackGround(message);
     }
     function ShowErrorMessage(message)
     {
@@ -768,8 +774,8 @@
                 background: "red",
             }
         }).showToast();
-        //console.log(message);
-        SendMessageToBackGround(message);
+        console.log(message);
+        //SendMessageToBackGround(message);
     }
 })();
 

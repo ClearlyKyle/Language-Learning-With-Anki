@@ -8,8 +8,7 @@
     /* YOUTUBE */
     if (window.location.href.includes("youtube.com/watch"))
     {
-        console.log("Adding button to youtube video")
-        SendMessageToBackGround("[MAIN] Adding button to youtube video")
+        console.log("[MAIN] Adding button to youtube video")
 
         // we loop until the element 'lln-full-dict' is available 
         // 1st : lln-full-dict-wrap    is loaded with no elements, we abserve until they exist
@@ -20,7 +19,7 @@
             if (document.querySelector('.lln-full-dict-wrap') != null)
             {
                 clearInterval(check_dict_wrap_exists);
-                SendMessageToBackGround("'.lln-full-dict-wrap' has been found...")
+                console.log("'.lln-full-dict-wrap' has been found...")
 
                 Add_Functions_To_Side_Bar_Subs();
                 Highlight_Words();
@@ -33,7 +32,7 @@
                         // either subtitle dictionary clicked or the side bar dictionary first clicked
                         if (mutation.addedNodes[1].className == 'lln-full-dict' || mutation.addedNodes[1].className == 'lln-full-dict right')
                         {
-                            SendMessageToBackGround("Dictionary is now visible")
+                            console.log("Dictionary is now visible")
                             Set_Up_Anki_Button_Observer();
                             Add_Functions_To_Side_Bar_Subs();
 
@@ -47,7 +46,7 @@
                         childList: true
                     }
                 );
-                SendMessageToBackGround("'.lln-full-dict-wrap' observer set! ")
+                console.log("'.lln-full-dict-wrap' observer set! ")
 
             }
         }, 100); // check every 100ms 
@@ -57,7 +56,7 @@
     {
         if (document.getElementsByClassName('lln-full-dict').length)
         {
-            SendMessageToBackGround("[Set_Up_Anki_Button_Observer] 'lln-full-dict' has been found! Start Observer")
+            console.log("[Set_Up_Anki_Button_Observer] 'lln-full-dict' has been found! Start Observer")
             Add_Anki_Button_To_Popup_Dictionary()
 
             var dictionary_observer = new MutationObserver(function (mutations)
@@ -66,7 +65,7 @@
                 {
                     if (mutation.removedNodes.length === 2)
                     {
-                        SendMessageToBackGround("[MutationObserver] Adding ANKI option")
+                        console.log("[MutationObserver] Adding ANKI option")
                         Add_Anki_Button_To_Popup_Dictionary()
                         return
                     }
@@ -74,7 +73,7 @@
             });
             // keep your eyes open for the next time we see the dictionary open
             dictionary_observer.observe(document.getElementsByClassName('lln-full-dict-wrap')[0], { attributes: true, childList: true });
-            SendMessageToBackGround("[Set_Up_Anki_Button_Observer] 'lln-full-dict-wrap' Observer has been set!")
+            console.log("[Set_Up_Anki_Button_Observer] 'lln-full-dict-wrap' Observer has been set!")
         }
     }
 
@@ -119,17 +118,15 @@
         else
         {
             console.log("[Add_Anki_Button_To_Popup_Dictionary] No word to save")
-            SendMessageToBackGround("[Add_Anki_Button_To_Popup_Dictionary] No word to save")
             return
         }
 
-        SendMessageToBackGround("Boom! Button has been added!")
+        console.log("Boom! Button has been added!")
     }
 
     function Remove_Word_From_Highlight_List()
     {
         console.log("[Remove_Word_From_Highlight_List] Get current word and remove from saved list of words")
-        SendMessageToBackGround("[Remove_Word_From_Highlight_List] Get current word and remove from saved list of words")
 
         // Get currently clicked word..
         const word_element = document.getElementsByClassName('lln-dict-contextual');
@@ -145,7 +142,6 @@
         } else
         {
             console.log("[Remove_Word_From_Highlight_List] Cannot get word from subtitle")
-            SendMessageToBackGround("[Remove_Word_From_Highlight_List] Cannot get word from subtitle")
             return
         }
 
@@ -178,7 +174,7 @@
 
     function Handle_Side_Bar_Dictionary()
     {
-        SendMessageToBackGround("[Handle_Subtitle_Dictionary] Side Bar Dictionary has been clicked...")
+        console.log("[Handle_Subtitle_Dictionary] Side Bar Dictionary has been clicked...")
         // We want to save the word for the current subtitle in the sidebar, so first we need to 
         //	set that subtitle as "active"
 
@@ -187,15 +183,15 @@
             document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn active")[0].classList.remove("active")
 
         // Add "active" to the current "anki-active"
-        SendMessageToBackGround("[HandleSideBar] adding 'active' to 'anki-active'")
+        console.log("[HandleSideBar] adding 'active' to 'anki-active'")
         document.getElementsByClassName("anki-active")[0].classList.add("active");
 
         // Click the "active" subtitle
         //	this should jump the video to where the subtitle is being said
-        SendMessageToBackGround("[HandleSideBar] clicking the subtitle")
+        console.log("[HandleSideBar] clicking the subtitle")
         document.querySelector(".lln-vertical-view-sub.lln-with-play-btn.anki-active").click();
 
-        SendMessageToBackGround("[HandleSideBar] Get Dictionary Data!")
+        console.log("[HandleSideBar] Get Dictionary Data!")
         const data = Side_Bar_Dictionary_GetData();
         console.log(data);
 
@@ -206,13 +202,13 @@
         var video = document.querySelector('video');
         var ctx = canvas.getContext('2d');
 
-        SendMessageToBackGround("[HandleSideBar] pause the video!")
+        console.log("[HandleSideBar] pause the video!")
         video.pause();
 
         var checkExist = setInterval(function ()
         {
             //your code to be executed after X ms
-            SendMessageToBackGround("[HandleSideBar] Video state = " + video.readyState)
+            console.log("[HandleSideBar] Video state = " + video.readyState)
             if (video.readyState === 4)
             {
                 clearInterval(checkExist)
@@ -238,7 +234,7 @@
 
     function Handle_Subtitle_Dictionary()
     {
-        SendMessageToBackGround("[Handle_Subtitle_Dictionary] Subtitle Dictionary has been clicked...")
+        console.log("[Handle_Subtitle_Dictionary] Subtitle Dictionary has been clicked...")
         if (document.querySelector('.lln-full-dict') != null)
         {
             // We have the subtitle bar dictionary open
@@ -246,7 +242,7 @@
         }
         else
         {
-            SendMessageToBackGround("[Handle_Subtitle_Dictionary] ERROR!!")
+            console.log("[Handle_Subtitle_Dictionary] ERROR!!")
         }
         return;
     }
@@ -254,8 +250,7 @@
     function Side_Bar_Dictionary_GetData()
     {
         console.log("")
-        console.log("LLW_sendtoAnki -> Sending to ANKI")
-        SendMessageToBackGround("[LLW_sendtoAnki] Sending to Anki...")
+        console.log("[LLW_sendtoAnki] Sending to Anki...")
 
         /* making time stamped url */
         var videoId = document.querySelectorAll('[itemprop="videoId"]')[0].content;
@@ -370,7 +365,6 @@
     function Subtitle_Dictionary_GetData()
     {
         console.log("[Subtitle_Dictionary_GetData] Getting Data for Anki...")
-        SendMessageToBackGround("[Subtitle_Dictionary_GetData] Getting Data for Anki...")
 
         var canvas = document.createElement('canvas');
         var video = document.querySelector('video');
@@ -473,7 +467,7 @@
     function Add_Functions_To_Side_Bar_Subs()
     {
         // We have the side bar dictionary open
-        SendMessageToBackGround("[AddFunctionsToSideBarSubs] Adding all 'onclick' events...")
+        console.log("[AddFunctionsToSideBarSubs] Adding all 'onclick' events...")
 
         // setInterval allows us to run a function repeatedly, starting after the interval of time, then repeating continuously at that interval.
         var wait_for_all_subtitles_to_be_loaded = setInterval(function () 
@@ -522,8 +516,6 @@
                                     console.log(currentElement.getAttribute("data-index"));
                                     index_id = currentElement.getAttribute("data-index");
 
-                                    SendMessageToBackGround("Side bar subtitle index = " + index_id)
-
                                     // First, we need to set this element to "anki-active"
                                     // If nothing has an "anki-active" tag, then we cannot remove it to move it to another element
                                     if (document.querySelector(".anki-active") != null)
@@ -544,7 +536,6 @@
                 })
             }
         }, 100);
-        SendMessageToBackGround("...all 'onclick' events have been added!")
     }
 
     function Store_Word_In_Chrome(word_to_store)
@@ -635,7 +626,6 @@
     function LLW_Send_Data_To_Anki(data)
     {
         console.log("[LLW_Send_Data_To_Anki] Sending to Anki...")
-        SendMessageToBackGround("[LLW_Send_Data_To_Anki] Sending to Anki...")
         console.log(data)
 
         Store_Word_In_Chrome(data['word']);
@@ -746,8 +736,7 @@
                         /* show error message */
                         ShowErrorMessage("Error! " + error);
                     });
-                console.log("Send to ANKI complete!");
-                SendMessageToBackGround("[LLW_Send_Data_To_Anki] Send to ANKI complete!");
+                console.log("[LLW_Send_Data_To_Anki] Send to ANKI complete!");
             }
         );
     }
@@ -763,7 +752,6 @@
             }
         }).showToast();
         console.log(message);
-        //SendMessageToBackGround(message);
     }
     function ShowErrorMessage(message)
     {
@@ -775,7 +763,6 @@
             }
         }).showToast();
         console.log(message);
-        //SendMessageToBackGround(message);
     }
 })();
 

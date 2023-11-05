@@ -2,12 +2,15 @@
 var fetchOptions = function (selectId, url, action, params = {})
 {
 	var selectEl = document.getElementById(selectId);
+    //console.log({selectEl})
 
 	return new Promise((resolve, reject) =>
 	{
-		chrome.storage.local.get(selectId, (stored) =>
+		chrome.storage.local.get([selectId], (res) =>
 		{
-			var storedVal = stored[selectId] || 'Basic';
+			//var storedVal = stored[selectId] || 'Basic';
+            const storedVal = res[selectId];
+            console.log(selectId, storedVal);
 
 			fetch(url, { method: "POST", body: JSON.stringify({ "action": action, "params": params }) }).then(r => r.json()).then(data =>
 			{
@@ -19,14 +22,16 @@ var fetchOptions = function (selectId, url, action, params = {})
 					if (item === storedVal) e.selected = true;
 					selectEl.appendChild(e);
 				})
+                // append a 'blank' option, deck name and card type cannot have a blank option 
 				if (action === "modelFieldNames")
 				{
 					e = document.createElement("option");
 					e.value = "";
 					e.text = "";
 					selectEl.add(e);
+                    if(storedVal === "")
+                        e.selected = true;
 				}
-
 			}).then(r => resolve(r)).catch(e => console.log(e));
 		});
 	});
@@ -35,8 +40,14 @@ var fetchOptions = function (selectId, url, action, params = {})
 var saveOption = function (selectId)
 {
 	var selectEl = document.getElementById(selectId);
-	console.log('saveOption', selectEl.value)
-	return chrome.storage.local.set({ [selectId]: selectEl.value })
+    console.log({ [selectId]: selectEl.value })
+    if(selectEl.value)
+	    return chrome.storage.local.set({ [selectId]: selectEl.value })
+    else
+    {
+        console.log("we have something here", selectEl);
+        return chrome.storage.local.set({ [selectId]: "" })
+    }
 }
 
 function Show_Colour_Options()
@@ -46,8 +57,10 @@ function Show_Colour_Options()
 		console.log("Stored Highlight colour : ", ankiHighLightColour)
 		console.log("Stored Highlight colour toggle : ", ankiHighLightSavedWords)
 
-		document.getElementById("ankiHighLightSavedWords").checked = ankiHighLightSavedWords;
-		document.getElementById("ankiHighLightColour").value = ankiHighLightColour;
+        if(ankiHighLightSavedWords)
+		    document.getElementById("ankiHighLightSavedWords").checked = ankiHighLightSavedWords;
+        if(ankiHighLightColour)
+		    document.getElementById("ankiHighLightColour").value = ankiHighLightColour;
 	})
 }
 
@@ -83,7 +96,6 @@ document.addEventListener("DOMContentLoaded", function ()
 			fetchOptions('ankiNoteNameSelected', url, 'modelNames') /* note type */
 		]).then(() =>
 		{
-
 			/* Then we get all the Field's for the selected Note type */
 			/*      dont change 'modelFieldNames' - this is for ankiconnect */
 			var model_Name_value = model_Name.value;

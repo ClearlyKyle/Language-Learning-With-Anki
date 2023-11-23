@@ -101,18 +101,20 @@
             remove_highlight.onclick = Remove_Word_From_Highlight_List;
         }
 
-        // Get currently clicked word..
+/*
         const word_element = document.getElementsByClassName('lln-dict-contextual');
         if (word_element.length) // If there is a valid word to store then add buttons
         {
             btn_location.append(anki_div, remove_highlight)
-            //btn_location.appendChild(remove_highlight)
         }
         else
         {
-            console.log("[Add_Anki_Button_To_Popup_Dictionary] No word to save")
-            return
+            // We have clicked a word with no translation (english word?)
+            console.log("[Add_Anki_Button_To_Popup_Dictionary] Word without translation");
+            btn_location.append(anki_div, remove_highlight)
         }
+*/
+        btn_location.append(anki_div, remove_highlight)
 
         console.log("Boom! Button has been added!")
     }
@@ -264,16 +266,27 @@
 
         /* Getting translation of the word selected */
         // make sure the translation language is set to english
-        if (document.getElementsByClassName('lln-dict-contextual').length)
+        const dict_context = document.getElementsByClassName('lln-dict-contextual')
+        if (dict_context.length)
         {
-            var word = document.getElementsByClassName('lln-dict-contextual')[0].children[1].innerText;
-            var translation_text = document.getElementsByClassName('lln-dict-contextual')[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
+            var word = dict_context[0].children[1].innerText;
+            var translation_text = dict_context[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
             var translation_text_without_most_common_number = translation_text.split("\n").slice(1);// removing the 3k, 2k, 4k, from the translation
             //var translation = translation_text_without_most_common_number.join('\n').replace(/(?:\r\n|\r|\n)/g, '<br>'); // replace line brea '\n' with <br> tag
             var translation = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
-        } else
+        } 
+        else
         {
-            var word = ""
+            /* English word is clicked */
+            if(document.getElementsByClassName('lln-highlighted-word'))
+            {
+                var word = document.getElementsByClassName('lln-highlighted-word')[0].innerText; // NOTE : Could we just do this for any word selected?
+            }
+            else
+            {
+                var word = ""
+            }
+
             var translation = ""
         }
 
@@ -309,15 +322,20 @@
             // There are two sets of example sentences, so we can choose between which set we want
             // TODO : default to one or none if there is nothing
             var example_sentences = "";
-            if (document.getElementsByClassName('lln-word-examples').length)
+            const example_sentences_element = document.getElementsByClassName('lln-word-examples');
+            if (example_sentences_element.length)
             {
                 // We default to using current
                 const current_or_tatoeba = ankiExampleSentenceSource === "Tatoeba" ? 1 : 0;
 
-                const all_examples = document.getElementsByClassName('lln-word-examples')[current_or_tatoeba].children;
-                for (var i = 1; i != all_examples.length; i++)
+                const example_sentences_list = example_sentences_element[current_or_tatoeba];
+                if(example_sentences_list)
                 {
-                    example_sentences += all_examples[i].innerText + "<br>";
+                    const all_examples = example_sentences_list.children;
+                    for (var i = 1; i != all_examples.length; i++)
+                    {
+                        example_sentences += all_examples[i].innerText + "<br>";
+                    }
                 }
             }
 

@@ -227,15 +227,15 @@
 
     function Get_YouTube_VideoID()
     {
-        var video_id = window.location.search.split('v=')[1];
-        var ampersandPosition = video_id.indexOf('&');
+        const video_id = window.location.search.split('v=')[1];
+        const ampersand_position = video_id.indexOf('&');
 
         console.log("raw video_id : ", video_id);
-        if (ampersandPosition != -1)
+        if (ampersand_position != -1)
         {
-            return video_id.substring(0, ampersandPosition);
+            return video_id.substring(0, ampersand_position);
         }
-        return "FailedToGetID"
+        return video_id;
     }
 
     function Subtitle_Dictionary_GetData()

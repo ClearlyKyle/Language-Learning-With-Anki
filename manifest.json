@@ -18,7 +18,8 @@
                 "resources/toastify.css"
             ],
             "matches": [
-                "*://*.youtube.com/watch*"
+                "*://*.youtube.com/watch*",
+                "*://*.netflix.com/watch/*"
             ],
             "run_at": "document_end"
         }

@@ -174,30 +174,30 @@
         if (document.querySelector('.lln-vertical-view-sub.lln-with-play-btn.active') != null)
             document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn active")[0].classList.remove("active")
 
-        // add "active" to the current "anki-active-sidebar-sub", "anki-active-sidebar-sub" is set when we
-        // click on a word in the sidebar
-        const active_side_bar_subtitile = document.getElementsByClassName("anki-active-sidebar-sub");
+        const active_side_bar_subtitile = document.getElementsByClassName('anki-active-sidebar-sub');
+        
 
         if(active_side_bar_subtitile.length > 0)
         {            
+            // Get the video element
+            // NOTE : This might be different on Netflix...
+            const video_element = document.getElementsByTagName('video')[0];
+
+            // add "active" to the current "anki-active-sidebar-sub", "anki-active-sidebar-sub" is set when we
+            // click on a word in the sidebar
             active_side_bar_subtitile[0].classList.add("active");
     
             // jump video to the subtitle with the word we want
-            document.querySelector(".lln-vertical-view-sub.lln-with-play-btn.anki-active-sidebar-sub").click();
-    
-            // after the video pauses, we take the screenshot
-            const canvas = document.createElement('canvas');
-            const video = document.querySelector('video');
-            const ctx = canvas.getContext('2d');
+            document.querySelector('.anki-onclick.active').click();
     
             console.log("[Handle_Jump_To_Subtitle_With_Sidebar] pause the video!")
-            video.pause();
+            video_element.pause();
     
             var checkExist = setInterval(function ()
             {
                 // Wait for the video to jump to time and be paused...
-                console.log("[Handle_Jump_To_Subtitle_With_Sidebar] Video state = " + video.readyState)
-                if (video.readyState === 4)
+                console.log("[Handle_Jump_To_Subtitle_With_Sidebar] Video state = " + video_element.readyState)
+                if (video_element.readyState === 4)
                 {
                     clearInterval(checkExist)
                     Subtitle_Dictionary_GetData();

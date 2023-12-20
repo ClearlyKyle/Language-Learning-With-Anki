@@ -1,23 +1,35 @@
 (function ()
 {
-    /* This runs on all "youtube.com/watch" web pages */
+    /* This runs on all "youtube" and "netflix" web pages */
     console.log("----- [content_script.js] LOADED");
 
-    /* YOUTUBE */
-    if (window.location.href.includes("youtube.com/watch"))
+    if (window.location.href.includes("netflix") || window.location.href.includes("youtube")) // NOTE : Do we need this?
     {
-        console.log("[MAIN] Adding button to youtube video")
+        console.log("[MAIN] Adding button...")
 
-        // we loop until the element 'lln-full-dict' is available 
-        // 1st : lln-full-dict-wrap    is loaded with no elements, we abserve until they exist
-        // 2nd : lln-full-dict         is loaded the first time a word is clicked to translate
+        let lln_search_class_name = '';
+        if(window.location.href.includes("netflix"))
+        {
+            lln_search_class_name = 'lln-netflix';
+        }
+        else if(window.location.href.includes("youtube"))
+        {
+            lln_search_class_name = 'lln-youtube';
+        }
+        else
+        {
+            console.log("Wrong website");
+            return;
+        }
+        
 
+        // we loop for the body to had the correct "lln" class name set
         var check_dict_wrap_exists = setInterval(function ()
         {
-            if (document.querySelector('.lln-full-dict-wrap') != null)
+            if (document.querySelector('.' + lln_search_class_name) != null)
             {
                 clearInterval(check_dict_wrap_exists);
-                console.log("'.lln-full-dict-wrap' has been found...")
+                console.log("'" + lln_search_class_name + "' has been found...")
 
                 Add_Functions_To_Side_Bar_Subs();
                 //Highlight_Words();
@@ -26,54 +38,44 @@
                 {
                     for (let mutation of mutations)
                     {
-                        // either subtitle dictionary clicked or the side bar dictionary first clicked
-                        if (mutation.addedNodes[1].className == 'lln-full-dict' || mutation.addedNodes[1].className == 'lln-full-dict right')
+                        // look for either the subtitle dictionary clicked or the side bar dictionary first clicked
+                        for(let new_elem of mutation.addedNodes)
                         {
-                            Set_Up_Anki_Button_Observer();
+                            if (new_elem instanceof HTMLElement)
+                            {
+                                if (new_elem.classList.contains('lln-full-dict'))
+                                {
+                                    // the dictionary has been opened so we add the Anki button to it
+                                    console.log("dictionary has been loaded...");
+                                    Add_Anki_Button_To_Popup_Dictionary();
+                                    break;
+                                }
+                            }
 
-                            dict_wrap_observer.disconnect()
                         }
                     }
                 });
-                dict_wrap_observer.observe(document.getElementsByClassName('lln-full-dict-wrap')[0],
+                dict_wrap_observer.observe(document.getElementsByClassName(lln_search_class_name)[0],
                     {
                         attributes: true,
-                        childList: true
+                        childList: true,
+                        subtree: true
                     }
                 );
             }
         }, 100); // check every 100ms 
     }
 
-    function Set_Up_Anki_Button_Observer()
-    {
-        if (document.getElementsByClassName('lln-full-dict').length)
-        {
-            console.log("[Set_Up_Anki_Button_Observer] 'lln-full-dict' has been found! Start Observer")
-            Add_Anki_Button_To_Popup_Dictionary()
-
-            var dictionary_observer = new MutationObserver(function (mutations)
-            {
-                for (let mutation of mutations)
-                {
-                    if (mutation.removedNodes.length === 2)
-                    {
-                        console.log("[MutationObserver] Adding ANKI option")
-                        Add_Anki_Button_To_Popup_Dictionary()
-                        return
-                    }
-                }
-            });
-            // keep your eyes open for the next time we see the dictionary open
-            dictionary_observer.observe(document.getElementsByClassName('lln-full-dict-wrap')[0], { attributes: true, childList: true });
-            console.log("[Set_Up_Anki_Button_Observer] 'lln-full-dict-wrap' Observer has been set!")
-        }
-    }
-
     function Add_Anki_Button_To_Popup_Dictionary()
     {
         const btn_location = document.getElementsByClassName('lln-external-dicts-container')[0];
         const highlight_location = document.getElementsByClassName('lln-word-save-buttons-wrap')[0];
+
+        if(!btn_location && !highlight_location)
+        {
+            console.log("Error finding the elements: 'lln-external-dicts-container' and 'lln-word-save-buttons-wrap'")
+            return;
+        }
 
         /* create Anki Button */
         let anki_div = document.createElement("div");
@@ -101,19 +103,6 @@
             remove_highlight.onclick = Remove_Word_From_Highlight_List;
         }
 
-/*
-        const word_element = document.getElementsByClassName('lln-dict-contextual');
-        if (word_element.length) // If there is a valid word to store then add buttons
-        {
-            btn_location.append(anki_div, remove_highlight)
-        }
-        else
-        {
-            // We have clicked a word with no translation (english word?)
-            console.log("[Add_Anki_Button_To_Popup_Dictionary] Word without translation");
-            btn_location.append(anki_div, remove_highlight)
-        }
-*/
         btn_location.append(anki_div, remove_highlight)
 
         console.log("Boom! Button has been added!")
@@ -176,7 +165,7 @@
 
         const active_side_bar_subtitile = document.getElementsByClassName('anki-active-sidebar-sub');
         
-
+        
         if(active_side_bar_subtitile.length > 0)
         {            
             // Get the video element
@@ -225,44 +214,123 @@
         return;
     }
 
-    function Get_YouTube_VideoID()
+    function Get_Video_URL()
     {
-        const video_id = window.location.search.split('v=')[1];
-        const ampersand_position = video_id.indexOf('&');
+        var url  = "url_here";
+        var video_id = "1234";
 
-        console.log("raw video_id : ", video_id);
-        if (ampersand_position != -1)
+        // YOUTUBE URL
+        if (window.location.href.includes("youtube.com/watch"))
         {
-            return video_id.substring(0, ampersand_position);
+            const rawid = window.location.search.split('v=')[1];
+            const ampersand_position = rawid.indexOf('&');
+    
+            if (ampersand_position != -1)
+            {
+                video_id = rawid.substring(0, ampersand_position);
+            }
+            else
+            {
+                video_id = rawid;
+            }
+            console.log("youtube video id : ", video_id);
+            
+            // build url
+            const curr_time = document.querySelector(".video-stream").currentTime.toFixed();
+
+            url = "https://youtu.be/" + video_id + "?t=" + curr_time; /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
         }
-        return video_id;
+        // NETFLIX URL
+        else if (window.location.href.includes("netflix.com/watch"))
+        {
+            // get video id
+            const pattern = /(?:title|watch)\/(\d+)/;
+            const match = url.match(pattern);
+
+            if(match && match[1])
+            {
+                video_id = match[1];
+            }
+            console.log("netflix video id : ", video_id);
+
+
+            // build url
+            const curr_time = document.querySelector('video').currentTime.toFixed();
+
+            url = "https://www.netflix.com/watch/" + video_id + "?t=" + curr_time; // https://www.netflix.com/watch/70196252?t=349
+        }
+        else
+        {
+            console.log("What website are we on?");
+        }
+
+        return [url, video_id];
     }
 
-    function Subtitle_Dictionary_GetData()
+    function Get_Screenshot()
+    {
+        if(window.location.href.includes("youtube.com/watch"))
+        {
+            var canvas = document.createElement('canvas');
+            var video = document.querySelector('video');
+            var ctx = canvas.getContext('2d');
+    
+            // Change the size here
+            canvas.width = 640;
+            canvas.height = 360;
+    
+            ctx.drawImage(video, 0, 0, 640, 360);
+    
+            var dataURL = canvas.toDataURL("image/png");
+            dataURL = dataURL.replace(/^data:image\/(png|jpg);base64,/, "")
+    
+            //return [canvas.width, canvas.height, dataURL];
+            return Promise.resolve([canvas.width, canvas.height, dataURL]);
+        }
+        else if (window.location.href.includes("netflix.com/watch"))
+        {
+            // Send a message to background.js requesting to capture the visible tab     
+            document.getElementsByClassName('lln-full-dict')[0].style.visibility = "hidden";
+            
+            return new Promise(function (resolve, reject) 
+            {
+                chrome.runtime.sendMessage({ action: 'captureVisibleTab' }, function (response) 
+                {
+                    if (response && response.imageData) 
+                    {
+                        document.getElementsByClassName('lln-full-dict')[0].style.visibility = "visible";
+                        const img = new Image();
+                        img.onload = function() 
+                        {
+                            const image_data = img.src.replace(/^data:image\/(png|jpg);base64,/, "");
+                            resolve([img.width, img.height, image_data]);
+                        };
+                        img.src = response.imageData;
+                    }
+                    else 
+                    {
+                        reject(new Error('Failed to capture image data'));
+                    }
+                    console.log('Captured image data:', response);
+                });
+            });
+        }
+
+        return Promise.resolve([100, 100, 0]);
+    }
+
+    async function Subtitle_Dictionary_GetData()
     {
         // This is where we pull all the data we want from the popup dictionary
         console.log("[Subtitle_Dictionary_GetData] Getting Data for Anki...")
 
-        var canvas = document.createElement('canvas');
-        var video = document.querySelector('video');
-        var ctx = canvas.getContext('2d');
+        const [image_width, image_height, image_data] = await Get_Screenshot();
 
-        // Change the size here
-        canvas.width = 640;
-        canvas.height = 360;
-
-        ctx.drawImage(video, 0, 0, 640, 360);
-
-        var dataURL = canvas.toDataURL("image/png");
-        dataURL = dataURL.replace(/^data:image\/(png|jpg);base64,/, "")
-
-        // making time stamped url
-        var videoId = Get_YouTube_VideoID();
-        var current_time = document.querySelector(".video-stream").currentTime.toFixed();
-        var youtube_share_url = "https://youtu.be/" + videoId + "?t=" + current_time; /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
+        // get the video id and the url with timestamp
+        const [video_url, video_id] = Get_Video_URL();
 
         /* make the file name unique to avoid duplicates */
-        const imageFilename = 'Youtube2Anki_' + canvas.width + 'x' + canvas.height + '_' + videoId + '_' + Math.random().toString(36).substring(7) + '.png';
+        const image_filename = 'Youtube2Anki_' + image_width + 'x' + image_height + '_' + video_id + '_' + Math.random().toString(36).substring(7) + '.png';
 
         /* Getting translation of the word selected */
         // make sure the translation language is set to english
@@ -340,19 +408,19 @@
             }
 
             var fields = {
-                "image-filename": imageFilename || "",
-                "image-data": dataURL || "",
+                "image-filename": image_filename || "",
+                "image-data": image_data || "",
                 "subtitle": subtitle || "",
                 "subtitle-translation": subtitle_translation || "",
                 "word": word.toLowerCase() || "", // better here to help with reg
                 "basic-translation": translation || "",
                 "extra-translation": extra_definitions || "",
-                "url": '<a href="' + youtube_share_url + '">Video Link</a>' || "",
+                "url": '<a href="' + video_url + '">Video Link</a>' || "",
                 "example-sentences": example_sentences || "",
             };
 
-            // console.log("Fields before passing to Anki")
-            // console.log({ fields });
+            console.log("Fields before passing to Anki")
+            console.log({ fields });
 
             LLW_Send_Data_To_Anki(fields);
         });

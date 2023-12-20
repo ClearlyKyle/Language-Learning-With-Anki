@@ -1,11 +1,14 @@
 {
     "manifest_version": 3,
     "name": "LLW to Anki",
-    "description": "SAve words from LLW and send to Anki",
-    "version": "1.0",
+    "description": "Save words from languagereactor video subtitles and send to Anki",
+    "version": "2.0",
     "author": "@clearlykyle",
     "permissions": [
         "storage"
+    ],
+    "host_permissions": [
+        "<all_urls>"
     ],
     "content_scripts": [
         {
@@ -18,8 +21,8 @@
                 "resources/toastify.css"
             ],
             "matches": [
-                "*://*.youtube.com/watch*",
-                "*://*.netflix.com/watch/*"
+                "*://*.youtube.com/*",
+                "*://*.netflix.com/*"
             ],
             "run_at": "document_end"
         }

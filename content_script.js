@@ -553,7 +553,10 @@
                                         "modelName": model,
                                         "deckName": deck,
                                         "fields": fields,
-                                        "tags": ["LLW_to_Anki"]
+                                        "tags": ["LLW_to_Anki"],
+                                        "options": {
+                                            "allowDuplicate": true,
+                                        }
                                     }
                                 }
                             }

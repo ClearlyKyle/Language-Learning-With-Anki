@@ -165,7 +165,6 @@
 
         const active_side_bar_subtitile = document.getElementsByClassName('anki-active-sidebar-sub');
         
-        
         if(active_side_bar_subtitile.length > 0)
         {            
             // Get the video element
@@ -289,30 +288,42 @@
         }
         else if (window.location.href.includes("netflix.com/watch"))
         {
+            // Replace 'yourElementId' with the ID of your element or use another way to select your element
+            const dictionary_element        = document.getElementsByClassName('lln-full-dict')[0];
+            const extern_dict_row_element   = document.getElementsByClassName('lln-external-dicts-row')[0];
+
             // Send a message to background.js requesting to capture the visible tab     
-            document.getElementsByClassName('lln-full-dict')[0].style.visibility = "hidden";
+            dictionary_element.style.visibility         = "hidden";
+            extern_dict_row_element.style.visibility    = "hidden";
+
+            console.log('Dictionary Element is now hidden, I hope');
             
             return new Promise(function (resolve, reject) 
             {
-                chrome.runtime.sendMessage({ action: 'captureVisibleTab' }, function (response) 
+                setTimeout(function ()
                 {
-                    if (response && response.imageData) 
+                    chrome.runtime.sendMessage({ action: 'captureVisibleTab' }, function (response) 
                     {
-                        document.getElementsByClassName('lln-full-dict')[0].style.visibility = "visible";
-                        const img = new Image();
-                        img.onload = function() 
+                        if (response && response.imageData) 
                         {
-                            const image_data = img.src.replace(/^data:image\/(png|jpg);base64,/, "");
-                            resolve([img.width, img.height, image_data]);
-                        };
-                        img.src = response.imageData;
-                    }
-                    else 
-                    {
-                        reject(new Error('Failed to capture image data'));
-                    }
-                    console.log('Captured image data:', response);
-                });
+                            dictionary_element.style.visibility         = "visible";
+                            extern_dict_row_element.style.visibility    = "visible";
+
+                            const img = new Image();
+                            img.onload = function() 
+                            {
+                                const image_data = img.src.replace(/^data:image\/(png|jpg);base64,/, "");
+                                resolve([img.width, img.height, image_data]);
+                            };
+                            img.src = response.imageData;
+                        }
+                        else 
+                        {
+                            reject(new Error('Failed to capture image data'));
+                        }
+                        console.log('Captured image data:', response);
+                    });
+                }, 500);
             });
         }
 
@@ -590,7 +601,7 @@
                 console.log("Deck Name: ", model)
                 console.log("Model Name: ", deck)
 
-                var fields = {
+                const fields = {
                     [ankiFieldScreenshotSelected]: '<img src="' + data['image-filename'] + '" />',
                     [ankiSubtitleSelected]: data['subtitle'],
                     [ankiSubtitleTranslation]: data['subtitle-translation'],
@@ -603,7 +614,7 @@
 
                 console.log(fields)
 
-                var body = {
+                const body = {
                     "action": "multi",
                     "params": {
                         "actions": [
@@ -632,7 +643,7 @@
                     }
                 };
 
-                var permission_data = {
+                const permission_data = {
                     "action": "requestPermission",
                     "version": 6,
                 };
@@ -659,7 +670,7 @@
                                     // https://jsfiddle.net/2qasgcfd/3/
                                     // https://github.com/apvarun/toastify-js
                                     if (data[1].result === null)
-                                        ShowErrorMessage("Error! " + data[1].error);
+                                        ShowErrorMessage("Anki Fetch Return Error! " + data[1].error);
                                     else
                                         ShowSucessMessage("Sucessfully added to ANKI");
 
@@ -667,13 +678,11 @@
                             })
                             .catch((error) =>
                             {
-                                /* show error message */
-                                ShowErrorMessage("Error! " + error);
+                                ShowErrorMessage("Anki Post Error! " + error);
                             })
                     }).catch((error) =>
                     {
-                        /* show error message */
-                        ShowErrorMessage("Error! " + error);
+                        ShowErrorMessage("Permission Error, extension doesnt have permission to connect to Anki, check AnkiConnect config 'webCorsOriginList', " + error);
                     });
                 console.log("[LLW_Send_Data_To_Anki] Send to ANKI complete!");
             }

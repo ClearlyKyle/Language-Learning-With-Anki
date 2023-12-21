@@ -215,8 +215,8 @@
 
     function Get_Video_URL()
     {
-        var url  = "url_here";
-        var video_id = "1234";
+        var time_stamped_url    = "url_here";
+        var video_id            = "1234";
 
         // YOUTUBE URL
         if (window.location.href.includes("youtube.com/watch"))
@@ -237,14 +237,14 @@
             // build url
             const curr_time = document.querySelector(".video-stream").currentTime.toFixed();
 
-            url = "https://youtu.be/" + video_id + "?t=" + curr_time; /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
+            time_stamped_url = "https://youtu.be/" + video_id + "?t=" + curr_time; /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
         }
         // NETFLIX URL
         else if (window.location.href.includes("netflix.com/watch"))
         {
-            // get video id
+            const page_url = window.location.href;
             const pattern = /(?:title|watch)\/(\d+)/;
-            const match = url.match(pattern);
+            const match = page_url.match(pattern);
 
             if(match && match[1])
             {
@@ -252,18 +252,17 @@
             }
             console.log("netflix video id : ", video_id);
 
-
             // build url
             const curr_time = document.querySelector('video').currentTime.toFixed();
 
-            url = "https://www.netflix.com/watch/" + video_id + "?t=" + curr_time; // https://www.netflix.com/watch/70196252?t=349
+            time_stamped_url = "https://www.netflix.com/watch/" + video_id + "?t=" + curr_time; // https://www.netflix.com/watch/70196252?t=349
         }
         else
         {
             console.log("What website are we on?");
         }
 
-        return [url, video_id];
+        return [time_stamped_url, video_id];
     }
 
     function Get_Screenshot()

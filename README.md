@@ -41,3 +41,20 @@ Exported data fields:
 Settings allow you to choose which fields are filled with what data. A blank options means that data is skipped
 
 ![options-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/screenshots/settings.png)
+
+## Poissible Errors
+
+`Acess to fetch at 'http://localhost:8765' from origin 'https://www.netflix.com' has been blocked by CORS policy`
+
+You need to make sure Netflix and Youtube are add to the "webCorsOriginList" in your AnkiConnect config. To do this, go to:
+
+`Anki > tools > Add-ons > AnkiConnect > config`
+
+Example of "webCorsOriginList"
+```json
+    "webCorsOriginList": [
+        "http://localhost",
+        "https://www.netflix.com",
+        "https://www.youtube.com"
+    ]
+```

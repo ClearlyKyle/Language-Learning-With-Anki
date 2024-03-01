@@ -267,62 +267,65 @@
 
     function Get_Screenshot()
     {
-        if(window.location.href.includes("youtube.com/watch"))
-        {
-            var canvas = document.createElement('canvas');
-            var video = document.querySelector('video');
-            var ctx = canvas.getContext('2d');
-    
-            // Change the size here
-            canvas.width = 640;
-            canvas.height = 360;
-    
-            ctx.drawImage(video, 0, 0, 640, 360);
-    
-            var dataURL = canvas.toDataURL("image/png");
-            dataURL = dataURL.replace(/^data:image\/(png|jpg);base64,/, "")
-    
-            //return [canvas.width, canvas.height, dataURL];
-            return Promise.resolve([canvas.width, canvas.height, dataURL]);
-        }
-        else if (window.location.href.includes("netflix.com/watch"))
+        if (window.location.href.includes("youtube.com/watch"))
         {
             // Replace 'yourElementId' with the ID of your element or use another way to select your element
-            const dictionary_element        = document.getElementsByClassName('lln-full-dict')[0];
-            const extern_dict_row_element   = document.getElementsByClassName('lln-external-dicts-row')[0];
+            const dictionary_element = document.getElementsByClassName('lln-full-dict')[0];
+            const extern_dict_row_element = document.getElementsByClassName('lln-external-dicts-row')[0];
 
             // Send a message to background.js requesting to capture the visible tab     
-            dictionary_element.style.visibility         = "hidden";
-            extern_dict_row_element.style.visibility    = "hidden";
+            dictionary_element.style.visibility = "hidden";
+            extern_dict_row_element.style.visibility = "hidden";
 
             console.log('Dictionary Element is now hidden, I hope');
-            
-            return new Promise(function (resolve, reject) 
+            return new Promise((resolve, reject) =>
             {
-                setTimeout(function ()
+                chrome.runtime.sendMessage({ action: 'captureVisibleTab' }, (response) =>
                 {
-                    chrome.runtime.sendMessage({ action: 'captureVisibleTab' }, function (response) 
+                    if (response && response.imageData)
                     {
-                        if (response && response.imageData) 
+                        const [, , image_data] = response.imageData.match(/data:(image\/\w+);base64,(.*)/);
+                        const img = new Image();
+                        img.onload = () =>
                         {
-                            dictionary_element.style.visibility         = "visible";
-                            extern_dict_row_element.style.visibility    = "visible";
+                            resolve([img.width, img.height, image_data]);
+                        };
+                        img.src = response.imageData;
+                    } else
+                    {
+                        reject(new Error('Failed to capture image data'));
+                    }
+                });
+            });
+        } else if (window.location.href.includes("netflix.com/watch"))
+        {
+            // Replace 'yourElementId' with the ID of your element or use another way to select your element
+            const dictionary_element = document.getElementsByClassName('lln-full-dict')[0];
+            const extern_dict_row_element = document.getElementsByClassName('lln-external-dicts-row')[0];
 
-                            const img = new Image();
-                            img.onload = function() 
-                            {
-                                const image_data = img.src.replace(/^data:image\/(png|jpg);base64,/, "");
-                                resolve([img.width, img.height, image_data]);
-                            };
-                            img.src = response.imageData;
-                        }
-                        else 
+            // Send a message to background.js requesting to capture the visible tab     
+            dictionary_element.style.visibility = "hidden";
+            extern_dict_row_element.style.visibility = "hidden";
+
+            console.log('Dictionary Element is now hidden, I hope');
+            return new Promise((resolve, reject) =>
+            {
+                chrome.runtime.sendMessage({ action: 'captureVisibleTab' }, (response) =>
+                {
+                    if (response && response.imageData)
+                    {
+                        const [, , image_data] = response.imageData.match(/data:(image\/\w+);base64,(.*)/);
+                        const img = new Image();
+                        img.onload = () =>
                         {
-                            reject(new Error('Failed to capture image data'));
-                        }
-                        console.log('Captured image data:', response);
-                    });
-                }, 500);
+                            resolve([img.width, img.height, image_data]);
+                        };
+                        img.src = response.imageData;
+                    } else
+                    {
+                        reject(new Error('Failed to capture image data'));
+                    }
+                });
             });
         }
 

@@ -287,11 +287,9 @@
         }
         else if (window.location.href.includes("netflix.com/watch"))
         {
-            // Replace 'yourElementId' with the ID of your element or use another way to select your element
             const dictionary_element        = document.getElementsByClassName('lln-full-dict')[0];
             const extern_dict_row_element   = document.getElementsByClassName('lln-external-dicts-row')[0];
-
-            // Send a message to background.js requesting to capture the visible tab     
+ 
             dictionary_element.style.visibility         = "hidden";
             extern_dict_row_element.style.visibility    = "hidden";
 
@@ -305,6 +303,7 @@
                     {
                         if (response && response.imageData) 
                         {
+                            // Do we need to rest this as visible again?
                             dictionary_element.style.visibility         = "visible";
                             extern_dict_row_element.style.visibility    = "visible";
 
@@ -320,7 +319,6 @@
                         {
                             reject(new Error('Failed to capture image data'));
                         }
-                        console.log('Captured image data:', response);
                     });
                 }, 500);
             });
@@ -384,7 +382,6 @@
         // 	this is set with the "Translation language" in the options of LLWYT
         if (document.getElementsByClassName('lln-whole-title-translation').length)
         {
-            //"var" is FUNCTION scoped and "let" is BLOCK scoped
             var subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText;
             //let subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText.replace('\n', ' ');
         }
@@ -396,26 +393,50 @@
         chrome.storage.local.get("ankiExampleSentenceSource", ({ ankiExampleSentenceSource }) =>
         {
             console.log("Getting example setting toggle: ", ankiExampleSentenceSource)
+
             // Getting Example sentences 
             // There are two sets of example sentences, so we can choose between which set we want
-            // TODO : default to one or none if there is nothing
+            // const ankiExampleSentenceSource = "Both";
             var example_sentences = "";
             const example_sentences_element = document.getElementsByClassName('lln-word-examples');
             if (example_sentences_element.length)
             {
-                // We default to using current
-                const current_or_tatoeba = ankiExampleSentenceSource === "Tatoeba" ? 1 : 0;
+                var example_sentences_list = [];
+                switch (ankiExampleSentenceSource) {
+                    case "Both":
+                        // Convert HTMLCollections to arrays and remove the first element from each
+                        if (example_sentences_element[0]) 
+                        {
+                            example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
+                        }
+                        if (example_sentences_element[1]) 
+                        {
+                            const tmp = Array.from(example_sentences_element[1].children).slice(1);
+                            example_sentences_list = example_sentences_list.concat(tmp);
+                        }
 
-                const example_sentences_list = example_sentences_element[current_or_tatoeba];
-                if(example_sentences_list)
-                {
-                    const all_examples = example_sentences_list.children;
-                    for (var i = 1; i != all_examples.length; i++)
-                    {
-                        example_sentences += all_examples[i].innerText + "<br>";
-                    }
+                        break;
+                    case "Current":
+                        if(example_sentences_element[0])
+                            example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
+                        break;
+                    case "Tatoeba":
+                        if(example_sentences_element[1])
+                            example_sentences_list = Array.from(example_sentences_element[1].children).slice(1);
+                        break;
+                    case "None": // fallthrough
+                    default:
+                        example_sentences_list = []; // Default case if none matches
+                        break;
                 }
+
+                //console.log(example_sentences_list);
+
+                example_sentences_list.forEach(element => {
+                    example_sentences += element.innerText + "<br>";
+                });
             }
+            //console.log(example_sentences);
 
             var fields = {
                 "image-filename": image_filename || "",

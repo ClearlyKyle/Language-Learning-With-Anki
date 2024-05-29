@@ -327,6 +327,73 @@
 
     // NOTE : This wont be presist between page loads
     let SCREENSHOT_FILENAMES = [];
+    
+    async function Get_Audio()
+    {
+        // YOUTUBE URL
+        if (window.location.href.includes("youtube.com/watch"))
+        {
+            const video_element = document.querySelector('video');
+            if (!video_element)
+            {
+                alert('No video element found!');
+                return null;
+            }
+    
+            // Start capturing the audio track
+            const stream = video_element.captureStream();
+            const audioStream = new MediaStream(stream.getAudioTracks());
+
+            // Create a MediaRecorder to record the audio
+            const recorder = new MediaRecorder(audioStream);
+            const chunks = [];
+                    
+            recorder.ondataavailable = event => chunks.push(event.data);
+            const audio_promise = new Promise((resolve, reject) => {
+                recorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64Audio  = reader.result.split(',')[1]; 
+                        resolve(base64Audio);
+                    };
+                    reader.readAsDataURL(blob);
+                };
+            });
+            
+          
+            let auto_stop_initial_state = false; // Should we even bother saving this?
+            let auto_pause_element      = document.getElementsByClassName('lln-toggle')[0];
+        
+            if (!auto_stop_initial_state)
+            {
+                auto_pause_element.click() // turn on autopause
+                console.log("Autopause has been turned on (on)");
+            }
+            
+            // click the "replay subtitle button"
+            document.getElementsByClassName('lln-subs-replay-btn')[0].click();
+            recorder.start();
+
+            video_element.addEventListener('timeupdate', function onTimeUpdate()
+            {
+                if (video_element.paused && video_element.readyState === 4)
+                {
+                    recorder.stop();
+                    console.log("Audio recording stop")
+                    video_element.removeEventListener('timeupdate', onTimeUpdate);
+        
+                    //auto_pause_element = auto_stop_initial_state;
+                    //if (!auto_stop_initial_state)
+                    //{
+                    //    auto_pause_element.click() // toggle autopause back off
+                    //}
+                }
+            });
+
+            return await audio_promise;
+        }
+    }
 
     async function Subtitle_Dictionary_GetData() // This is where we pull all the data we want from the popup dictionary
     {

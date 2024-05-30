@@ -27,6 +27,7 @@ const anki_field_names = [
     "ankiBasicTranslationSelected",
     "ankiExampleSentencesSelected",
     "ankiOtherTranslationSelected",
+    "ankiAudioSelected",
     "ankiFieldURL"
 ];
 

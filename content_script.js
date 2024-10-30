@@ -327,7 +327,7 @@
 
     // NOTE : This wont be presist between page loads
     let SCREENSHOT_FILENAMES = [];
-    
+
     async function Get_Audio()
     {
         // YOUTUBE URL
@@ -463,7 +463,16 @@
 
                     card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
                 }
-
+                
+                // get audio for subtitle we are on
+                var audio_data = "";
+                const audio_filename = 'Youtube2Anki_audio_' +  file_id + '.webm';
+                if(ankiAudioSelected !== "")
+                {
+                    audio_data = await Get_Audio();
+                }
+                console.log(audio_data);
+                
                 /* the popup dictionary window */
                 let selected_word = "";
                 const dict_context = document.getElementsByClassName('lln-dict-contextual');
@@ -596,6 +605,24 @@
                 LLW_Send_Data_To_Anki(anki_settings, card_data, image_data);
             }
         );
+            //console.log(example_sentences);
+
+            var fields = {
+                "image-filename": image_filename || "",
+                "image-data": image_data || "",
+                "subtitle": subtitle || "",
+                "subtitle-translation": subtitle_translation || "",
+                "word": word.toLowerCase() || "", // better here to help with reg
+                "basic-translation": translation || "",
+                "extra-translation": extra_definitions || "",
+                "audio-data": audio_data || "",
+                "audio-filename": audio_filename || "",
+                "url": '<a href="' + video_url + '">Video Link</a>' || "",
+                "example-sentences": example_sentences || "",
+            };
+
+            LLW_Send_Data_To_Anki(fields);
+        });
     }
 
     function Add_Functions_To_Side_Bar_Subs()
@@ -747,6 +774,17 @@
         console.log("fields : ", fields);
 
         let actions = [];
+
+                // Check if audio data exists
+                if (data['audio-data']) {
+                    actions.push({
+                        "action": "storeMediaFile",
+                        "params": {
+                            "filename": data['audio-filename'],
+                            "data": data['audio-data']
+                        }
+                    });
+                }
 
         if (image_data.data)
         {

@@ -383,20 +383,23 @@
                     image_data['data'] = captured_image_data;
                     image_data['filename'] = image_filename;
 
-                    card_data[ankiFieldScreenshotSelected] = image_filename;
+                    card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
                 }
 
                 /* the popup dictionary window */
+                var selected_word = "";
                 const dict_context = document.getElementsByClassName('lln-dict-contextual');
                 if (dict_context.length)
                 {
                     /* Get word selected */
+                    selected_word = dict_context[0].children[1].innerText;
+
                     if (ankiWordSelected)
                     {
                         console.log("Fill ankiWordSelected");
 
-                        card_data[ankiWordSelected] = dict_context[0].children[1].innerText;
-                        //Store_Word_In_Chrome(card_data[ankiWordSelected]); // Used for highliting words used in cards
+                        card_data[ankiWordSelected] = selected_word;
+                        //Store_Word_In_Chrome(selected_word); // Used for highliting words used in cards
                     }
 
                     /* Get basic translation (this is top of the popup dic) */
@@ -436,11 +439,10 @@
 
                         card_data[ankiSubtitleSelected] = subtitle;
 
-                        if (ankiWordSelected) // if we are storing the word too, we will highlight in the subtitle
+                        if (selected_word) // if we are storing the word too, we will highlight in the subtitle
                         {
                             // make selected word bold in the subtitles, might not work for all languages :(
-                            const word = card_data[ankiWordSelected];
-                            card_data[ankiSubtitleSelected] = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + word + "</b>");
+                            card_data[ankiSubtitleSelected] = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${selected_word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + selected_word + "</b>");
                         }
                     }
                 }

@@ -8,11 +8,11 @@
         console.log("[MAIN] Adding button...")
 
         let lln_search_class_name = '';
-        if(window.location.href.includes("netflix"))
+        if (window.location.href.includes("netflix"))
         {
             lln_search_class_name = 'lln-netflix';
         }
-        else if(window.location.href.includes("youtube"))
+        else if (window.location.href.includes("youtube"))
         {
             lln_search_class_name = 'lln-youtube';
         }
@@ -21,7 +21,7 @@
             console.log("Wrong website");
             return;
         }
-        
+
 
         // we loop for the body to had the correct "lln" class name set
         var check_dict_wrap_exists = setInterval(function ()
@@ -39,7 +39,7 @@
                     for (let mutation of mutations)
                     {
                         // look for either the subtitle dictionary clicked or the side bar dictionary first clicked
-                        for(let new_elem of mutation.addedNodes)
+                        for (let new_elem of mutation.addedNodes)
                         {
                             if (new_elem instanceof HTMLElement)
                             {
@@ -71,7 +71,7 @@
         const btn_location = document.getElementsByClassName('lln-external-dicts-container')[0];
         const highlight_location = document.getElementsByClassName('lln-word-save-buttons-wrap')[0];
 
-        if(!btn_location && !highlight_location)
+        if (!btn_location && !highlight_location)
         {
             console.log("Error finding the elements: 'lln-external-dicts-container' and 'lln-word-save-buttons-wrap'")
             return;
@@ -164,9 +164,9 @@
             document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn active")[0].classList.remove("active")
 
         const active_side_bar_subtitile = document.getElementsByClassName('anki-active-sidebar-sub');
-        
-        if(active_side_bar_subtitile.length > 0)
-        {            
+
+        if (active_side_bar_subtitile.length > 0)
+        {
             // Get the video element
             // NOTE : This might be different on Netflix...
             const video_element = document.getElementsByTagName('video')[0];
@@ -174,13 +174,13 @@
             // add "active" to the current "anki-active-sidebar-sub", "anki-active-sidebar-sub" is set when we
             // click on a word in the sidebar
             active_side_bar_subtitile[0].classList.add("active");
-    
+
             // jump video to the subtitle with the word we want
             document.querySelector('.anki-onclick.active').click();
-    
+
             console.log("[Handle_Jump_To_Subtitle_With_Sidebar] pause the video!")
             video_element.pause();
-    
+
             var checkExist = setInterval(function ()
             {
                 // Wait for the video to jump to time and be paused...
@@ -215,15 +215,15 @@
 
     function Get_Video_URL()
     {
-        var time_stamped_url    = "url_here";
-        var video_id            = "1234";
+        var time_stamped_url = "url_here";
+        var video_id = "1234";
 
         // YOUTUBE URL
         if (window.location.href.includes("youtube.com/watch"))
         {
             const rawid = window.location.search.split('v=')[1];
             const ampersand_position = rawid.indexOf('&');
-    
+
             if (ampersand_position != -1)
             {
                 video_id = rawid.substring(0, ampersand_position);
@@ -233,7 +233,7 @@
                 video_id = rawid;
             }
             console.log("youtube video id : ", video_id);
-            
+
             // build url
             const curr_time = document.querySelector(".video-stream").currentTime.toFixed();
 
@@ -246,7 +246,7 @@
             const pattern = /(?:title|watch)\/(\d+)/;
             const match = page_url.match(pattern);
 
-            if(match && match[1])
+            if (match && match[1])
             {
                 video_id = match[1];
             }
@@ -267,34 +267,34 @@
 
     function Get_Screenshot()
     {
-        if(window.location.href.includes("youtube.com/watch"))
+        if (window.location.href.includes("youtube.com/watch"))
         {
             var canvas = document.createElement('canvas');
             var video = document.querySelector('video');
             var ctx = canvas.getContext('2d');
-    
+
             // Change the size here
             canvas.width = 640;
             canvas.height = 360;
-    
+
             ctx.drawImage(video, 0, 0, 640, 360);
-    
+
             var dataURL = canvas.toDataURL("image/png");
             dataURL = dataURL.replace(/^data:image\/(png|jpg);base64,/, "")
-    
+
             //return [canvas.width, canvas.height, dataURL];
             return Promise.resolve([canvas.width, canvas.height, dataURL]);
         }
         else if (window.location.href.includes("netflix.com/watch"))
         {
-            const dictionary_element        = document.getElementsByClassName('lln-full-dict')[0];
-            const extern_dict_row_element   = document.getElementsByClassName('lln-external-dicts-row')[0];
- 
-            dictionary_element.style.visibility         = "hidden";
-            extern_dict_row_element.style.visibility    = "hidden";
+            const dictionary_element = document.getElementsByClassName('lln-full-dict')[0];
+            const extern_dict_row_element = document.getElementsByClassName('lln-external-dicts-row')[0];
+
+            dictionary_element.style.visibility = "hidden";
+            extern_dict_row_element.style.visibility = "hidden";
 
             console.log('Dictionary Element is now hidden, I hope');
-            
+
             return new Promise(function (resolve, reject) 
             {
                 setTimeout(function ()
@@ -304,11 +304,11 @@
                         if (response && response.imageData) 
                         {
                             // Do we need to rest this as visible again?
-                            dictionary_element.style.visibility         = "visible";
-                            extern_dict_row_element.style.visibility    = "visible";
+                            dictionary_element.style.visibility = "visible";
+                            extern_dict_row_element.style.visibility = "visible";
 
                             const img = new Image();
-                            img.onload = function() 
+                            img.onload = function () 
                             {
                                 const image_data = img.src.replace(/^data:image\/(png|jpg);base64,/, "");
                                 resolve([img.width, img.height, image_data]);
@@ -326,164 +326,196 @@
 
         return Promise.resolve([100, 100, 0]);
     }
-    
+
     async function Subtitle_Dictionary_GetData() // This is where we pull all the data we want from the popup dictionary
     {
-        // TODO : Get all field data here and send to Anki without getting fields again
         chrome.storage.local.get(
             [
-                //"ankiDeckNameSelected", 
-                //"ankiNoteNameSelected", 
-                "ankiFieldScreenshotSelected", 
-                //"ankiSubtitleSelected", 
-                //"ankiSubtitleTranslation',
-                //"ankiWordSelected", 
-                //"ankiBasicTranslationSelected", 
-                //"ankiExampleSentencesSelected", 
-                //"ankiOtherTranslationSelected", 
-                //"ankiFieldURL", 
-                //"ankiConnectUrl", 
+                "ankiDeckNameSelected",
+                "ankiNoteNameSelected",
+                "ankiFieldScreenshotSelected",
+                "ankiSubtitleSelected",
+                "ankiSubtitleTranslation",
+                "ankiWordSelected",
+                "ankiBasicTranslationSelected",
+                "ankiExampleSentencesSelected",
+                "ankiOtherTranslationSelected",
+                "ankiFieldURL",
+                "ankiConnectUrl",
                 "ankiExampleSentenceSource"],
-           async({ 
-                //ankiDeckNameSelected, 
-                //ankiNoteNameSelected, 
-                ankiFieldScreenshotSelected, 
-                //ankiSubtitleSelected, 
-                //ankiSubtitleTranslation,
-                //ankiWordSelected, 
-                //ankiBasicTranslationSelected, 
-                //ankiExampleSentencesSelected, 
-                //ankiOtherTranslationSelected, 
-                //ankiFieldURL, 
-                //ankiConnectUrl, 
+            async ({
+                ankiDeckNameSelected,
+                ankiNoteNameSelected,
+                ankiFieldScreenshotSelected,
+                ankiSubtitleSelected,
+                ankiSubtitleTranslation,
+                ankiWordSelected,
+                ankiBasicTranslationSelected,
+                ankiExampleSentencesSelected,
+                ankiOtherTranslationSelected,
+                ankiFieldURL,
+                ankiConnectUrl,
                 ankiExampleSentenceSource }) =>
-        {
-            console.log("[Subtitle_Dictionary_GetData] Getting Data for Anki...");
+            {
+                console.log("[Subtitle_Dictionary_GetData] Getting Data for Anki...");
 
-            let image_filename = "";
-            let image_data = "";
-            let video_url = "";
-            let video_id = "";
-            if (ankiFieldScreenshotSelected) 
-            {
-                const [image_width, image_height, captured_image_data] = await Get_Screenshot();
-            
-                [video_url, video_id] = Get_Video_URL();
-            
-                /* make the file name unique to avoid duplicates */
-                image_filename = 'Youtube2Anki_' + image_width + 'x' + image_height + '_' + video_id + '_' + Math.random().toString(36).substring(7) + '.png';
-            
-                image_data = captured_image_data;
-            }
+                let card_data = {};
+                let image_data = {};
 
-            /* Getting translation of the word selected */
-            // make sure the translation language is set to english
-            const dict_context = document.getElementsByClassName('lln-dict-contextual')
-            if (dict_context.length)
-            {
-                var word = dict_context[0].children[1].innerText;
-                var translation_text = dict_context[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
-                var translation_text_without_most_common_number = translation_text.split("\n").slice(1);// removing the 3k, 2k, 4k, from the translation
-                //var translation = translation_text_without_most_common_number.join('\n').replace(/(?:\r\n|\r|\n)/g, '<br>'); // replace line brea '\n' with <br> tag
-                var translation = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
-            } 
-            else
-            {
-                /* English word is clicked */
-                if(document.getElementsByClassName('lln-highlighted-word'))
+                if (ankiFieldScreenshotSelected) 
                 {
-                    var word = document.getElementsByClassName('lln-highlighted-word')[0].innerText; // NOTE : Could we just do this for any word selected?
+                    console.log("Fill ankiFieldScreenshotSelected");
+
+                    const [image_width, image_height, captured_image_data] = await Get_Screenshot();
+
+                    [video_url, video_id] = Get_Video_URL();
+
+                    if (ankiFieldURL)
+                    {
+                        console.log("Fill ankiFieldURL");
+
+                        card_data[ankiFieldURL] = video_url;
+                    }
+
+                    /* make the file name unique to avoid duplicates */
+                    image_filename = 'Youtube2Anki_' + image_width + 'x' + image_height + '_' + video_id + '_' + Math.random().toString(36).substring(7) + '.png';
+
+                    image_data['data'] = captured_image_data;
+                    image_data['filename'] = image_filename;
+
+                    card_data[ankiFieldScreenshotSelected] = image_filename;
                 }
-                else
+
+                /* the popup dictionary window */
+                const dict_context = document.getElementsByClassName('lln-dict-contextual');
+                if (dict_context.length)
                 {
-                    var word = ""
+                    /* Get word selected */
+                    if (ankiWordSelected)
+                    {
+                        console.log("Fill ankiWordSelected");
+
+                        card_data[ankiWordSelected] = dict_context[0].children[1].innerText;
+                        //Store_Word_In_Chrome(card_data[ankiWordSelected]); // Used for highliting words used in cards
+                    }
+
+                    /* Get basic translation (this is top of the popup dic) */
+                    if (ankiBasicTranslationSelected)
+                    {
+                        console.log("Fill ankiBasicTranslationSelected");
+
+                        const translation_text = dict_context[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
+
+                        const translation_text_without_most_common_number = translation_text.split("\n").slice(1); // removing the 3k, 2k, 4k, from the translation
+
+                        card_data[ankiBasicTranslationSelected] = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
+                    }
                 }
 
-                var translation = ""
-            }
+                /* Get full definition (this is the difinitions provided bellow the AI part) */
+                if (ankiOtherTranslationSelected)
+                {
+                    const full_definition_element = document.getElementsByClassName('lln-dict-section-full');
+                    if (full_definition_element.length)
+                    {
+                        console.log("Fill ankiOtherTranslationSelected");
 
-            if (document.getElementsByClassName('lln-dict-section-full').length)
-            {
-                //var extra_definitions = document.getElementsByClassName('lln-dict-section-full')[0].innerText.replace(/(?:\r\n|\r|\n)/g, '<br>');
-                var extra_definitions = document.getElementsByClassName('lln-dict-section-full')[0].innerHTML;
-            }
-
-            // make selected word bold in the subtitles, might not work for all languages :(
-            var subtitle = document.getElementsByClassName('lln-subs')[0].innerText;
-            subtitle = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + word + "</b>");
-
-            // get 2nd language translation (this appears under the main subtitle)
-            // 	this is set with the "Translation language" in the options of LLWYT
-            if (document.getElementsByClassName('lln-whole-title-translation').length)
-            {
-                var subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText;
-                //let subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText.replace('\n', ' ');
-            }
-            else
-            {
-                var subtitle_translation = ""
-            }
-
-            console.log("Getting example setting toggle: ", ankiExampleSentenceSource)
-
-            // Getting Example sentences 
-            // There are two sets of example sentences, so we can choose between which set we want
-            // const ankiExampleSentenceSource = "Both";
-            var example_sentences = "";
-            const example_sentences_element = document.getElementsByClassName('lln-word-examples');
-            if (example_sentences_element.length)
-            {
-                var example_sentences_list = [];
-                switch (ankiExampleSentenceSource) {
-                    case "Both":
-                        // Convert HTMLCollections to arrays and remove the first element from each
-                        if (example_sentences_element[0]) 
-                        {
-                            example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
-                        }
-                        if (example_sentences_element[1]) 
-                        {
-                            const tmp = Array.from(example_sentences_element[1].children).slice(1);
-                            example_sentences_list = example_sentences_list.concat(tmp);
-                        }
-
-                        break;
-                    case "Current":
-                        if(example_sentences_element[0])
-                            example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
-                        break;
-                    case "Tatoeba":
-                        if(example_sentences_element[1])
-                            example_sentences_list = Array.from(example_sentences_element[1].children).slice(1);
-                        break;
-                    case "None": // fallthrough
-                    default:
-                        example_sentences_list = []; // Default case if none matches
-                        break;
+                        card_data[ankiOtherTranslationSelected] = full_definition_element[0].innerHTML;
+                    }
                 }
 
-                example_sentences_list.forEach(element => {
-                    example_sentences += element.innerText + "<br>";
-                });
+                /* Get the subtitle text */
+                if (ankiSubtitleSelected)
+                {
+                    console.log("Fill ankiSubtitleSelected");
+
+                    const subtitle_element = document.getElementsByClassName('lln-subs');
+                    if (subtitle_element.length)
+                    {
+                        const subtitle = subtitle_element[0].innerText;
+
+                        card_data[ankiSubtitleSelected] = subtitle;
+
+                        if (ankiWordSelected) // if we are storing the word too, we will highlight in the subtitle
+                        {
+                            // make selected word bold in the subtitles, might not work for all languages :(
+                            const word = card_data[ankiWordSelected];
+                            card_data[ankiSubtitleSelected] = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + word + "</b>");
+                        }
+                    }
+                }
+
+                /* Get the translation text (will fail if its not loaded) */
+                if (ankiSubtitleTranslation)
+                {
+                    console.log("Fill ankiSubtitleTranslation");
+
+                    const subtitle_translation_element = document.getElementsByClassName('lln-whole-title-translation');
+                    if (subtitle_translation_element.length)
+                    {
+                        card_data[ankiSubtitleTranslation] = subtitle_translation_element[0].innerText;
+                    }
+                }
+
+                // Getting Example sentences 
+                // There are two sets of example sentences, so we can choose between which set we want
+                // const ankiExampleSentenceSource = "Both";
+                if (ankiExampleSentencesSelected)
+                {
+                    console.log("Fill ankiExampleSentencesSelected, from", ankiExampleSentenceSource);
+
+                    const example_sentences_element = document.getElementsByClassName('lln-word-examples');
+                    if (example_sentences_element.length)
+                    {
+                        var example_sentences_list = [];
+                        switch (ankiExampleSentenceSource)
+                        {
+                            case "Both":
+                                // Convert HTMLCollections to arrays and remove the first element from each
+                                if (example_sentences_element[0]) 
+                                {
+                                    example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
+                                }
+                                if (example_sentences_element[1]) 
+                                {
+                                    const tmp = Array.from(example_sentences_element[1].children).slice(1);
+                                    example_sentences_list = example_sentences_list.concat(tmp);
+                                }
+
+                                break;
+                            case "Current":
+                                if (example_sentences_element[0])
+                                    example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
+                                break;
+                            case "Tatoeba":
+                                if (example_sentences_element[1])
+                                    example_sentences_list = Array.from(example_sentences_element[1].children).slice(1);
+                                break;
+                            case "None": // fallthrough
+                            default:
+                                example_sentences_list = []; // Default case if none matches
+                                break;
+                        }
+
+                        console.log("Example sentences :", example_sentences_list);
+                        example_sentences_list.forEach(element =>
+                        {
+                            card_data[ankiExampleSentencesSelected] += element.innerText + "<br>";
+                        });
+                    }
+                }
+
+                console.log("Card data to send to Anki : ", card_data);
+
+                const anki_settings = {
+                    "deck": ankiDeckNameSelected,
+                    "note": ankiNoteNameSelected,
+                    "url": ankiConnectUrl,
+                }
+
+                LLW_Send_Data_To_Anki(anki_settings, card_data, image_data);
             }
-
-            var fields = {
-                "image-filename": image_filename || "",
-                "image-data": image_data || "",
-                "subtitle": subtitle || "",
-                "subtitle-translation": subtitle_translation || "",
-                "word": word.toLowerCase() || "", // better here to help with reg
-                "basic-translation": translation || "",
-                "extra-translation": extra_definitions || "",
-                "url": '<a href="' + video_url + '">Video Link</a>' || "",
-                "example-sentences": example_sentences || "",
-            };
-
-            console.log("Fields before passing to Anki")
-            console.log({ fields });
-
-            LLW_Send_Data_To_Anki(fields);
-        });
+        );
     }
 
     function Add_Functions_To_Side_Bar_Subs()
@@ -496,21 +528,21 @@
             if (sub_list_element) 
             {
                 clearInterval(wait_for_subtitle_list);
-                
+
                 const sub_list_element = document.getElementById("lln-vertical-view-subs");
                 // Create a MutationObserver to observe changes in the div
-                const sub_list_observer = new MutationObserver(function(mutations) 
+                const sub_list_observer = new MutationObserver(function (mutations) 
                 {
-                    mutations.forEach(function(mutation) 
+                    mutations.forEach(function (mutation) 
                     {
                         var elements_in_view = document.querySelectorAll('.in-scroll');
 
-                        elements_in_view.forEach(function(element) 
+                        elements_in_view.forEach(function (element) 
                         {
                             if (!element.classList.contains("anki-onclick")) 
                             {
                                 element.classList.add("anki-onclick");
-                                element.onclick = function() 
+                                element.onclick = function () 
                                 {
                                     const parent_with_data_index = event.target.parentNode.parentNode;
 
@@ -524,8 +556,9 @@
                                     // we need to search for any element other than the current one that has 
                                     // the classname 'anki-active-sidebar-sub'
                                     let elem_with_anki_active = document.getElementsByClassName("anki-active-sidebar-sub")[0];
+                                    geteleme
 
-                                    if(elem_with_anki_active)
+                                    if (elem_with_anki_active)
                                     {
                                         elem_with_anki_active.classList.remove("anki-active-sidebar-sub")
                                     }
@@ -536,7 +569,7 @@
                     });
                 });
                 const subs_list_config = { attributes: true, attributeFilter: ['class'] };
-        
+
                 sub_list_observer.observe(sub_list_element, subs_list_config);
             }
         }, 100);
@@ -622,136 +655,106 @@
         });
     }
 
-    /* ----------------------------------------------------------------------------------------------------------- */
-    function LLW_Send_Data_To_Anki(data)
+    function LLW_Send_Data_To_Anki(anki_settings, fields, image_data)
     {
-        console.log("[LLW_Send_Data_To_Anki] Sending to Anki...")
+        console.log("Destination : ", anki_settings);
 
-        Store_Word_In_Chrome(data['word']);
+        if (Object.keys(fields).length === 0)
+        {
+            show_error_message("No fields were set, please set a field in the settings");
+            return;
+        }
 
-        chrome.storage.local.get(
-            ['ankiDeckNameSelected', 'ankiNoteNameSelected', 'ankiFieldScreenshotSelected', 'ankiSubtitleSelected', 'ankiSubtitleTranslation',
-                'ankiWordSelected', "ankiBasicTranslationSelected", "ankiExampleSentencesSelected", "ankiOtherTranslationSelected", "ankiFieldURL", "ankiConnectUrl", "ankiExampleSentenceSource"],
-            ({ ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected, ankiSubtitleTranslation,
-                ankiWordSelected, ankiBasicTranslationSelected, ankiExampleSentencesSelected, ankiOtherTranslationSelected, ankiFieldURL, ankiConnectUrl, ankiExampleSentenceSource }) =>
-            {
-                url = ankiConnectUrl || 'http://localhost:8765';
-                model = ankiNoteNameSelected || 'Basic';
-                deck = ankiDeckNameSelected || 'Default';
+        console.log("fields : ", fields);
 
-                console.log("Deck Name: ", model)
-                console.log("Model Name: ", deck)
+        var actions = [];
 
-                const mappings = {
-                    [ankiFieldScreenshotSelected]: '<img src="' + data['image-filename'] + '" />',
-                    [ankiSubtitleSelected]: data['subtitle'],
-                    [ankiSubtitleTranslation]: data['subtitle-translation'],
-                    [ankiWordSelected]: data['word'],
-                    [ankiBasicTranslationSelected]: data['basic-translation'],
-                    [ankiOtherTranslationSelected]: data['extra-translation'],
-                    [ankiFieldURL]: data['url'],
-                    [ankiExampleSentencesSelected]: data['example-sentences']
-                };
-        
-                const fields = Object.fromEntries(
-                    Object.entries(mappings).filter(([key, value]) => key && value !== "")
-                );
-        
-                console.log("fields : ", fields);
-
-                var actions = [];
-                
-                if (data['image-data'] && ankiFieldScreenshotSelected)
-                {
-                    console.log("Adding image data to note...");
-                    actions.push({
-                        "action": "storeMediaFile",
-                        "params": {
-                            "filename": data['image-filename'],
-                            "data": data['image-data']
-                        }
-                    });
+        if (image_data.data)
+        {
+            console.log("Adding image to note :", image_data);
+            actions.push({
+                "action": "storeMediaFile",
+                "params": {
+                    "filename": image_data.filename,
+                    "data": image_data.data
                 }
-                
-                actions.push({
-                    "action": "addNote",
-                    "params": {
-                        "note": {
-                            "modelName": model,
-                            "deckName": deck,
-                            "fields": fields,
-                            "tags": ["LLW_to_Anki"],
-                            "options": {
-                                "allowDuplicate": true,
-                            }
-                        }
+            });
+        }
+
+        actions.push({
+            "action": "addNote",
+            "params": {
+                "note": {
+                    "modelName": anki_settings.note,
+                    "deckName": anki_settings.deck,
+                    "fields": fields,
+                    "tags": ["LLW_to_Anki"],
+                    "options": {
+                        "allowDuplicate": true,
                     }
-                });
-                
-                console.log("actions : ", actions);
-                
-                const body = {
-                    "action": "multi",
-                    "params": {
-                        "actions": actions
-                    }
-                };
+                }
+            }
+        });
 
-                console.log("body : ", body);
+        console.log("actions : ", actions);
 
-                const permission_data = {
-                    "action": "requestPermission",
-                    "version": 6,
-                };
+        const body = {
+            "action": "multi",
+            "params": {
+                "actions": actions
+            }
+        };
 
-                fetch(url, {
+        console.log("body : ", body);
+
+        const permission_data = {
+            "action": "requestPermission",
+            "version": 6,
+        };
+
+        fetch(anki_settings.url, {
+            method: "POST",
+            body: JSON.stringify(permission_data),
+        })
+            .then((res) => res.json())
+            .then((data) =>
+            {
+                console.log(data);
+                fetch(anki_settings.url, {
                     method: "POST",
-                    body: JSON.stringify(permission_data),
+                    body: JSON.stringify(body),
                 })
                     .then((res) => res.json())
                     .then((data) =>
                     {
-                        console.log(data);
-                        fetch(url, {
-                            method: "POST",
-                            body: JSON.stringify(body),
-                        })
-                            .then((res) => res.json())
-                            .then((data) =>
+                        console.log("Fetch Return : ", data);
+                        let has_error = false;
+
+                        data.forEach((response, index) =>
+                        {
+                            if (response.result === null)
                             {
-                                console.log("Fetch Return : ", data)
-                                if (data.length) 
-                                {
-                                    data.forEach((response, index) => {
-                                        if (response.result === null) 
-                                        {
-                                            ShowErrorMessage(`Error in response ${index + 1}: ${response.error}`);
-                                        } 
-                                        else 
-                                        {
-                                            ShowSucessMessage(`Successfully added to ANKI`);
-                                        }
-                                    });
-                                }
-                                else
-                                {
-                                    ShowErrorMessage(`Error in response : ${data.error}`);
-                                }
-                            })
-                            .catch((error) =>
-                            {
-                                ShowErrorMessage("Anki Post Error! " + error);
-                            })
-                    }).catch((error) =>
+                                show_error_message(`Error in response ${index + 1}: ${response.error}`);
+                                has_error = true;
+                            }
+                        });
+
+                        if (!has_error)
+                        {
+                            show_success_message(`Successfully added to ANKI`);
+                        }
+                    })
+                    .catch((error) =>
                     {
-                        ShowErrorMessage("Permission Error, extension doesnt have permission to connect to Anki, check AnkiConnect config 'webCorsOriginList', " + error);
-                    });
-                console.log("[LLW_Send_Data_To_Anki] Send to ANKI complete!");
-            }
-        );
+                        show_error_message("Anki Post Error! " + error);
+                    })
+            }).catch((error) =>
+            {
+                show_error_message("Permission Error, extension doesnt have permission to connect to Anki, check AnkiConnect config 'webCorsOriginList', " + error);
+            });
     }
 
-    function ShowSucessMessage(message)
+    function show_success_message(message)
     {
         Toastify({
             text: message,
@@ -762,7 +765,8 @@
         }).showToast();
         console.log(message);
     }
-    function ShowErrorMessage(message)
+
+    function show_error_message(message)
     {
         Toastify({
             text: message,
@@ -773,5 +777,6 @@
         }).showToast();
         console.log(message);
     }
+
 })();
 

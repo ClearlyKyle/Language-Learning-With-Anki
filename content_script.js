@@ -326,72 +326,104 @@
 
         return Promise.resolve([100, 100, 0]);
     }
-
-    async function Subtitle_Dictionary_GetData()
+    
+    async function Subtitle_Dictionary_GetData() // This is where we pull all the data we want from the popup dictionary
     {
-        // This is where we pull all the data we want from the popup dictionary
-        console.log("[Subtitle_Dictionary_GetData] Getting Data for Anki...")
-
-        const [image_width, image_height, image_data] = await Get_Screenshot();
-
-        // get the video id and the url with timestamp
-        const [video_url, video_id] = Get_Video_URL();
-
-        /* make the file name unique to avoid duplicates */
-        const image_filename = 'Youtube2Anki_' + image_width + 'x' + image_height + '_' + video_id + '_' + Math.random().toString(36).substring(7) + '.png';
-
-        /* Getting translation of the word selected */
-        // make sure the translation language is set to english
-        const dict_context = document.getElementsByClassName('lln-dict-contextual')
-        if (dict_context.length)
+        // TODO : Get all field data here and send to Anki without getting fields again
+        chrome.storage.local.get(
+            [
+                //"ankiDeckNameSelected", 
+                //"ankiNoteNameSelected", 
+                "ankiFieldScreenshotSelected", 
+                //"ankiSubtitleSelected", 
+                //"ankiSubtitleTranslation',
+                //"ankiWordSelected", 
+                //"ankiBasicTranslationSelected", 
+                //"ankiExampleSentencesSelected", 
+                //"ankiOtherTranslationSelected", 
+                //"ankiFieldURL", 
+                //"ankiConnectUrl", 
+                "ankiExampleSentenceSource"],
+           async({ 
+                //ankiDeckNameSelected, 
+                //ankiNoteNameSelected, 
+                ankiFieldScreenshotSelected, 
+                //ankiSubtitleSelected, 
+                //ankiSubtitleTranslation,
+                //ankiWordSelected, 
+                //ankiBasicTranslationSelected, 
+                //ankiExampleSentencesSelected, 
+                //ankiOtherTranslationSelected, 
+                //ankiFieldURL, 
+                //ankiConnectUrl, 
+                ankiExampleSentenceSource }) =>
         {
-            var word = dict_context[0].children[1].innerText;
-            var translation_text = dict_context[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
-            var translation_text_without_most_common_number = translation_text.split("\n").slice(1);// removing the 3k, 2k, 4k, from the translation
-            //var translation = translation_text_without_most_common_number.join('\n').replace(/(?:\r\n|\r|\n)/g, '<br>'); // replace line brea '\n' with <br> tag
-            var translation = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
-        } 
-        else
-        {
-            /* English word is clicked */
-            if(document.getElementsByClassName('lln-highlighted-word'))
+            console.log("[Subtitle_Dictionary_GetData] Getting Data for Anki...");
+
+            let image_filename = "";
+            let image_data = "";
+            let video_url = "";
+            let video_id = "";
+            if (ankiFieldScreenshotSelected) 
             {
-                var word = document.getElementsByClassName('lln-highlighted-word')[0].innerText; // NOTE : Could we just do this for any word selected?
+                const [image_width, image_height, captured_image_data] = await Get_Screenshot();
+            
+                [video_url, video_id] = Get_Video_URL();
+            
+                /* make the file name unique to avoid duplicates */
+                image_filename = 'Youtube2Anki_' + image_width + 'x' + image_height + '_' + video_id + '_' + Math.random().toString(36).substring(7) + '.png';
+            
+                image_data = captured_image_data;
+            }
+
+            /* Getting translation of the word selected */
+            // make sure the translation language is set to english
+            const dict_context = document.getElementsByClassName('lln-dict-contextual')
+            if (dict_context.length)
+            {
+                var word = dict_context[0].children[1].innerText;
+                var translation_text = dict_context[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
+                var translation_text_without_most_common_number = translation_text.split("\n").slice(1);// removing the 3k, 2k, 4k, from the translation
+                //var translation = translation_text_without_most_common_number.join('\n').replace(/(?:\r\n|\r|\n)/g, '<br>'); // replace line brea '\n' with <br> tag
+                var translation = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
+            } 
+            else
+            {
+                /* English word is clicked */
+                if(document.getElementsByClassName('lln-highlighted-word'))
+                {
+                    var word = document.getElementsByClassName('lln-highlighted-word')[0].innerText; // NOTE : Could we just do this for any word selected?
+                }
+                else
+                {
+                    var word = ""
+                }
+
+                var translation = ""
+            }
+
+            if (document.getElementsByClassName('lln-dict-section-full').length)
+            {
+                //var extra_definitions = document.getElementsByClassName('lln-dict-section-full')[0].innerText.replace(/(?:\r\n|\r|\n)/g, '<br>');
+                var extra_definitions = document.getElementsByClassName('lln-dict-section-full')[0].innerHTML;
+            }
+
+            // make selected word bold in the subtitles, might not work for all languages :(
+            var subtitle = document.getElementsByClassName('lln-subs')[0].innerText;
+            subtitle = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + word + "</b>");
+
+            // get 2nd language translation (this appears under the main subtitle)
+            // 	this is set with the "Translation language" in the options of LLWYT
+            if (document.getElementsByClassName('lln-whole-title-translation').length)
+            {
+                var subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText;
+                //let subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText.replace('\n', ' ');
             }
             else
             {
-                var word = ""
+                var subtitle_translation = ""
             }
 
-            var translation = ""
-        }
-
-        if (document.getElementsByClassName('lln-dict-section-full').length)
-        {
-            //var extra_definitions = document.getElementsByClassName('lln-dict-section-full')[0].innerText.replace(/(?:\r\n|\r|\n)/g, '<br>');
-            var extra_definitions = document.getElementsByClassName('lln-dict-section-full')[0].innerHTML;
-        }
-
-        //console.log("Video URL (and time stamp) =", youtube_share_url)
-
-        // make selected word bold in the subtitles, might not work for all languages :(
-        var subtitle = document.getElementsByClassName('lln-subs')[0].innerText;
-        subtitle = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + word + "</b>");
-
-        // get 2nd language translation (this appears under the main subtitle)
-        // 	this is set with the "Translation language" in the options of LLWYT
-        if (document.getElementsByClassName('lln-whole-title-translation').length)
-        {
-            var subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText;
-            //let subtitle_translation = document.getElementsByClassName('lln-whole-title-translation')[0].innerText.replace('\n', ' ');
-        }
-        else
-        {
-            var subtitle_translation = ""
-        }
-
-        chrome.storage.local.get("ankiExampleSentenceSource", ({ ankiExampleSentenceSource }) =>
-        {
             console.log("Getting example setting toggle: ", ankiExampleSentenceSource)
 
             // Getting Example sentences 
@@ -430,13 +462,10 @@
                         break;
                 }
 
-                //console.log(example_sentences_list);
-
                 example_sentences_list.forEach(element => {
                     example_sentences += element.innerText + "<br>";
                 });
             }
-            //console.log(example_sentences);
 
             var fields = {
                 "image-filename": image_filename || "",
@@ -459,7 +488,6 @@
 
     function Add_Functions_To_Side_Bar_Subs()
     {
-        // We have the side bar dictionary open
         console.log("[Add_Functions_To_Side_Bar_Subs] Adding all 'onclick' events...")
 
         var wait_for_subtitle_list = setInterval(function () 
@@ -611,17 +639,10 @@
                 model = ankiNoteNameSelected || 'Basic';
                 deck = ankiDeckNameSelected || 'Default';
 
-                //console.log({
-                //        ankiDeckNameSelected, ankiNoteNameSelected, ankiFieldScreenshotSelected, ankiSubtitleSelected, ankiSubtitleTranslation,
-                //        ankiWordSelected, ankiBasicTranslationSelected, ankiExampleSentencesSelected, ankiOtherTranslationSelected, ankiFieldURL,
-                //        ankiConnectUrl, ankiExampleSentenceSource
-                //    });
-
-                console.log("Image File Name: ", data['image-filename'])
                 console.log("Deck Name: ", model)
                 console.log("Model Name: ", deck)
 
-                const fields = {
+                const mappings = {
                     [ankiFieldScreenshotSelected]: '<img src="' + data['image-filename'] + '" />',
                     [ankiSubtitleSelected]: data['subtitle'],
                     [ankiSubtitleTranslation]: data['subtitle-translation'],
@@ -631,37 +652,52 @@
                     [ankiFieldURL]: data['url'],
                     [ankiExampleSentencesSelected]: data['example-sentences']
                 };
+        
+                const fields = Object.fromEntries(
+                    Object.entries(mappings).filter(([key, value]) => key && value !== "")
+                );
+        
+                console.log("fields : ", fields);
 
-                console.log(fields)
-
+                var actions = [];
+                
+                if (data['image-data'] && ankiFieldScreenshotSelected)
+                {
+                    console.log("Adding image data to note...");
+                    actions.push({
+                        "action": "storeMediaFile",
+                        "params": {
+                            "filename": data['image-filename'],
+                            "data": data['image-data']
+                        }
+                    });
+                }
+                
+                actions.push({
+                    "action": "addNote",
+                    "params": {
+                        "note": {
+                            "modelName": model,
+                            "deckName": deck,
+                            "fields": fields,
+                            "tags": ["LLW_to_Anki"],
+                            "options": {
+                                "allowDuplicate": true,
+                            }
+                        }
+                    }
+                });
+                
+                console.log("actions : ", actions);
+                
                 const body = {
                     "action": "multi",
                     "params": {
-                        "actions": [
-                            {
-                                "action": "storeMediaFile",
-                                "params": {
-                                    "filename": data['image-filename'],
-                                    "data": data['image-data']
-                                }
-                            },
-                            {
-                                "action": "addNote",
-                                "params": {
-                                    "note": {
-                                        "modelName": model,
-                                        "deckName": deck,
-                                        "fields": fields,
-                                        "tags": ["LLW_to_Anki"],
-                                        "options": {
-                                            "allowDuplicate": true,
-                                        }
-                                    }
-                                }
-                            }
-                        ]
+                        "actions": actions
                     }
                 };
+
+                console.log("body : ", body);
 
                 const permission_data = {
                     "action": "requestPermission",
@@ -683,17 +719,23 @@
                             .then((res) => res.json())
                             .then((data) =>
                             {
-                                console.log("Fetch Return:")
-                                console.log(data)
-                                if (data.length > 1)
+                                console.log("Fetch Return : ", data)
+                                if (data.length) 
                                 {
-                                    // https://jsfiddle.net/2qasgcfd/3/
-                                    // https://github.com/apvarun/toastify-js
-                                    if (data[1].result === null)
-                                        ShowErrorMessage("Anki Fetch Return Error! " + data[1].error);
-                                    else
-                                        ShowSucessMessage("Sucessfully added to ANKI");
-
+                                    data.forEach((response, index) => {
+                                        if (response.result === null) 
+                                        {
+                                            ShowErrorMessage(`Error in response ${index + 1}: ${response.error}`);
+                                        } 
+                                        else 
+                                        {
+                                            ShowSucessMessage(`Successfully added to ANKI`);
+                                        }
+                                    });
+                                }
+                                else
+                                {
+                                    ShowErrorMessage(`Error in response : ${data.error}`);
                                 }
                             })
                             .catch((error) =>

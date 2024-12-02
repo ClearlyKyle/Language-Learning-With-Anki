@@ -339,7 +339,7 @@
                 alert('No video element found!');
                 return null;
             }
-    
+
             // Start capturing the audio track
             const stream = video_element.captureStream();
             const audioStream = new MediaStream(stream.getAudioTracks());
@@ -347,30 +347,33 @@
             // Create a MediaRecorder to record the audio
             const recorder = new MediaRecorder(audioStream);
             const chunks = [];
-                    
+
             recorder.ondataavailable = event => chunks.push(event.data);
-            const audio_promise = new Promise((resolve, reject) => {
-                recorder.onstop = () => {
+            const audio_promise = new Promise((resolve, reject) =>
+            {
+                recorder.onstop = () =>
+                {
                     const blob = new Blob(chunks, { type: 'audio/webm' });
                     const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const base64Audio  = reader.result.split(',')[1]; 
+                    reader.onloadend = () =>
+                    {
+                        const base64Audio = reader.result.split(',')[1];
                         resolve(base64Audio);
                     };
                     reader.readAsDataURL(blob);
                 };
             });
-            
-          
+
+
             let auto_stop_initial_state = false; // Should we even bother saving this?
-            let auto_pause_element      = document.getElementsByClassName('lln-toggle')[0];
-        
+            let auto_pause_element = document.getElementsByClassName('lln-toggle')[0];
+
             if (!auto_stop_initial_state)
             {
                 auto_pause_element.click() // turn on autopause
                 console.log("Autopause has been turned on (on)");
             }
-            
+
             // click the "replay subtitle button"
             document.getElementsByClassName('lln-subs-replay-btn')[0].click();
             recorder.start();
@@ -382,7 +385,7 @@
                     recorder.stop();
                     console.log("Audio recording stop")
                     video_element.removeEventListener('timeupdate', onTimeUpdate);
-        
+
                     //auto_pause_element = auto_stop_initial_state;
                     //if (!auto_stop_initial_state)
                     //{
@@ -408,6 +411,7 @@
                 "ankiBasicTranslationSelected",
                 "ankiExampleSentencesSelected",
                 "ankiOtherTranslationSelected",
+                "ankiAudioSelected",
                 "ankiFieldURL",
                 "ankiConnectUrl",
                 "ankiExampleSentenceSource"],
@@ -421,6 +425,7 @@
                 ankiBasicTranslationSelected,
                 ankiExampleSentencesSelected,
                 ankiOtherTranslationSelected,
+                ankiAudioSelected,
                 ankiFieldURL,
                 ankiConnectUrl,
                 ankiExampleSentenceSource }) =>
@@ -429,6 +434,7 @@
 
                 let card_data = {};
                 let image_data = {};
+                let audio_data = {};
 
                 [video_url, video_id, video_current_time] = Get_Video_URL();
 
@@ -463,16 +469,23 @@
 
                     card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
                 }
-                
+
                 // get audio for subtitle we are on
-                var audio_data = "";
-                const audio_filename = 'Youtube2Anki_audio_' +  file_id + '.webm';
-                if(ankiAudioSelected !== "")
+                if (ankiAudioSelected)
                 {
-                    audio_data = await Get_Audio();
+                    console.log("Fill ankiAudioSelected");
+
+                    const audio_filename = 'Youtube2Anki_audio_' + Math.random().toString(36).substring(7) + '.webm';
+
+                    // TODO : Only get audio once for any given subtitle
+                    const audio_raw_data = await Get_Audio();
+
+                    audio_data['data'] = audio_raw_data;
+                    audio_data['filename'] = audio_filename;
+
+                    card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']'; 
                 }
-                console.log(audio_data);
-                
+
                 /* the popup dictionary window */
                 let selected_word = "";
                 const dict_context = document.getElementsByClassName('lln-dict-contextual');
@@ -602,27 +615,9 @@
                     "url": ankiConnectUrl || 'http://localhost:8765',
                 }
 
-                LLW_Send_Data_To_Anki(anki_settings, card_data, image_data);
+                LLW_Send_Data_To_Anki(anki_settings, card_data, image_data, audio_data);
             }
         );
-            //console.log(example_sentences);
-
-            var fields = {
-                "image-filename": image_filename || "",
-                "image-data": image_data || "",
-                "subtitle": subtitle || "",
-                "subtitle-translation": subtitle_translation || "",
-                "word": word.toLowerCase() || "", // better here to help with reg
-                "basic-translation": translation || "",
-                "extra-translation": extra_definitions || "",
-                "audio-data": audio_data || "",
-                "audio-filename": audio_filename || "",
-                "url": '<a href="' + video_url + '">Video Link</a>' || "",
-                "example-sentences": example_sentences || "",
-            };
-
-            LLW_Send_Data_To_Anki(fields);
-        });
     }
 
     function Add_Functions_To_Side_Bar_Subs()
@@ -761,7 +756,7 @@
         });
     }
 
-    function LLW_Send_Data_To_Anki(anki_settings, fields, image_data)
+    function LLW_Send_Data_To_Anki(anki_settings, fields, image_data, audio_data)
     {
         console.log("Destination : ", anki_settings);
 
@@ -775,17 +770,6 @@
 
         let actions = [];
 
-                // Check if audio data exists
-                if (data['audio-data']) {
-                    actions.push({
-                        "action": "storeMediaFile",
-                        "params": {
-                            "filename": data['audio-filename'],
-                            "data": data['audio-data']
-                        }
-                    });
-                }
-
         if (image_data.data)
         {
             console.log("Adding image to note :", image_data);
@@ -794,6 +778,18 @@
                 "params": {
                     "filename": image_data.filename,
                     "data": image_data.data
+                }
+            });
+        }
+
+        if (audio_data.data)
+        {
+            console.log("Adding audio to note :", audio_data);
+            actions.push({
+                "action": "storeMediaFile",
+                "params": {
+                    "filename": audio_data.filename,
+                    "data": audio_data.data
                 }
             });
         }

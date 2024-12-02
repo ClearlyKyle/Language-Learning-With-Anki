@@ -215,8 +215,9 @@
 
     function Get_Video_URL()
     {
-        var time_stamped_url = "url_here";
-        var video_id = "1234";
+        let time_stamped_url = "url_here";
+        let video_id = "1234";
+        let current_time = 0;
 
         // YOUTUBE URL
         if (window.location.href.includes("youtube.com/watch"))
@@ -232,12 +233,19 @@
             {
                 video_id = rawid;
             }
-            console.log("youtube video id : ", video_id);
+            //console.log("youtube video id : ", video_id);
 
-            // build url
-            const curr_time = document.querySelector(".video-stream").currentTime.toFixed();
+            const video_element = document.querySelector(".video-stream");
+            if (!video_element)
+            {
+                alert("Where has the video element went?");
+            }
+            else
+            {
+                current_time = video_element.currentTime;
 
-            time_stamped_url = "https://youtu.be/" + video_id + "?t=" + curr_time; /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
+                time_stamped_url = "https://youtu.be/" + video_id + "?t=" + current_time.toFixed(); /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
+            }
         }
         // NETFLIX URL
         else if (window.location.href.includes("netflix.com/watch"))
@@ -250,19 +258,26 @@
             {
                 video_id = match[1];
             }
-            console.log("netflix video id : ", video_id);
+            //console.log("netflix video id : ", video_id);
 
-            // build url
-            const curr_time = document.querySelector('video').currentTime.toFixed();
+            const video_element = document.querySelector(".video");
+            if (!video_element)
+            {
+                alert("Where has the video element went?");
+            }
+            else
+            {
+                current_time = video_element.currentTime;
 
-            time_stamped_url = "https://www.netflix.com/watch/" + video_id + "?t=" + curr_time; // https://www.netflix.com/watch/70196252?t=349
+                time_stamped_url = "https://www.netflix.com/watch/" + video_id + "?t=" + current_time.toFixed(); // https://www.netflix.com/watch/70196252?t=349
+            }
         }
         else
         {
             console.log("What website are we on?");
         }
 
-        return [time_stamped_url, video_id];
+        return [time_stamped_url, video_id, current_time];
     }
 
     function Get_Screenshot()
@@ -327,6 +342,9 @@
         return Promise.resolve([100, 100, 0]);
     }
 
+    // NOTE : This wont be presist between page loads
+    let SCREENSHOT_FILENAMES = [];
+
     async function Subtitle_Dictionary_GetData() // This is where we pull all the data we want from the popup dictionary
     {
         chrome.storage.local.get(
@@ -362,13 +380,29 @@
                 let card_data = {};
                 let image_data = {};
 
+                [video_url, video_id, video_current_time] = Get_Video_URL();
+
                 if (ankiFieldScreenshotSelected) 
                 {
                     console.log("Fill ankiFieldScreenshotSelected");
 
-                    const [image_width, image_height, captured_image_data] = await Get_Screenshot();
+                    const image_filename = `Youtube2Anki_${video_id}_${video_current_time}.png`;
 
-                    [video_url, video_id] = Get_Video_URL();
+                    if (!SCREENSHOT_FILENAMES.includes(image_filename)) // not in our list
+                    {
+                        SCREENSHOT_FILENAMES.push(image_filename);
+
+                        console.log(`${image_filename} added to screenshot list`);
+
+                        const [image_width, image_height, captured_image_data] = await Get_Screenshot();
+
+                        image_data['data'] = captured_image_data;
+                        image_data['filename'] = image_filename;
+                    }
+                    else
+                    {
+                        console.log(`${image_filename} already exists.`);
+                    }
 
                     if (ankiFieldURL)
                     {
@@ -376,12 +410,6 @@
 
                         card_data[ankiFieldURL] = video_url;
                     }
-
-                    /* make the file name unique to avoid duplicates */
-                    image_filename = 'Youtube2Anki_' + image_width + 'x' + image_height + '_' + video_id + '_' + Math.random().toString(36).substring(7) + '.png';
-
-                    image_data['data'] = captured_image_data;
-                    image_data['filename'] = image_filename;
 
                     card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
                 }

@@ -1,5 +1,12 @@
 (function ()
 {
+    // Toggle the console output on and off
+    const CONSOLE_LOGGING = false;
+    if (!CONSOLE_LOGGING)
+    {
+        console.log = function () { };
+    }
+
     /* This runs on all "youtube" and "netflix" web pages */
     console.log("----- [content_script.js] LOADED");
 

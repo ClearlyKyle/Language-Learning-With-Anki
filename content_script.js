@@ -523,7 +523,7 @@
                 const anki_settings = {
                     "deck": ankiDeckNameSelected,
                     "note": ankiNoteNameSelected,
-                    "url": ankiConnectUrl,
+                    "url": ankiConnectUrl || 'http://localhost:8765',
                 }
 
                 LLW_Send_Data_To_Anki(anki_settings, card_data, image_data);

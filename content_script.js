@@ -30,7 +30,8 @@
     // we loop for the body to had the correct "lln" class name set
     let check_dict_wrap_exists = setInterval(function ()
     {
-        if (document.querySelector('.' + lln_search_class_name) != null)
+        const lln_element = document.getElementsByClassName(lln_search_class_name)[0];
+        if (lln_element)
         {
             clearInterval(check_dict_wrap_exists);
             console.log("'" + lln_search_class_name + "' has been found...")
@@ -59,7 +60,7 @@
                     }
                 }
             });
-            dict_wrap_observer.observe(document.getElementsByClassName(lln_search_class_name)[0],
+            dict_wrap_observer.observe(lln_element,
                 {
                     attributes: true,
                     childList: true,
@@ -69,42 +70,34 @@
         }
     }, 100); // check every 100ms 
 
+    // create Anki button
+    const anki_div = document.createElement("div");
+    anki_div.className = "anki-btn lln-external-dict-btn tippy";
+    anki_div.innerHTML = "Anki";
+    anki_div.setAttribute("data-tippy-content", "Send to Anki");
+
+    // create Remove Highlighted word button
+    const remove_highlight = document.createElement("div");
+    remove_highlight.className = "remove_highlight-btn lln-external-dict-btn tippy";
+    remove_highlight.innerHTML = "RC";
+    remove_highlight.setAttribute("data-tippy-content", "Remove word from being highlighted");
+    remove_highlight.onclick = Remove_Word_From_Highlight_List;
 
     function Add_Anki_Button_To_Popup_Dictionary()
     {
         const btn_location = document.getElementsByClassName('lln-external-dicts-container')[0];
-        //const highlight_location = document.getElementsByClassName('lln-word-save-buttons-wrap')[0];
-
         if (!btn_location)
         {
             console.log("Error finding element 'lln-external-dicts-container', unable to add the Anki button");
             return;
         }
 
-        // create Anki button
-        const anki_div = document.createElement("div");
-        anki_div.className = "anki-btn lln-external-dict-btn tippy";
-        anki_div.innerHTML = "Anki";
-        anki_div.setAttribute("data-tippy-content", "Send to Anki");
-
-        // create Remove Highlighted word button
-        const remove_highlight = document.createElement("div");
-        remove_highlight.className = "remove_highlight-btn lln-external-dict-btn tippy";
-        remove_highlight.innerHTML = "RC";
-        remove_highlight.setAttribute("data-tippy-content", "Remove word from being highlighted");
-
-        // HANDLE SIDE BAR DICT
-        if (document.querySelector('.lln-full-dict.right') != null)
+        const popup_dict_element = document.getElementsByClassName('lln-full-dict')[0];
+        if (popup_dict_element)
         {
-            anki_div.onclick = Handle_Jump_To_Subtitle_With_Sidebar;
-            remove_highlight.onclick = Remove_Word_From_Highlight_List;
-        }
-
-        // HANDLE SUBTITLE DICT
-        else if (document.querySelector('.lln-full-dict') != null)
-        {
-            anki_div.onclick = Subtitle_Dictionary_GetData;
-            remove_highlight.onclick = Remove_Word_From_Highlight_List;
+            anki_div.onclick = popup_dict_element.classList.contains("right") ?
+                Handle_Jump_To_Subtitle_With_Sidebar :
+                Subtitle_Dictionary_GetData;
         }
 
         btn_location.append(anki_div, remove_highlight);
@@ -165,9 +158,10 @@
         console.log("[Handle_Subtitle_Dictionary] Side Bar Dictionary has been clicked...")
 
         // if there is no current "active" subtitle, then we cannot remove the "active"
-        if (document.querySelector('.lln-vertical-view-sub.lln-with-play-btn.active') != null)
+        let active_element = document.querySelector('.lln-vertical-view-sub.lln-with-play-btn.active');
+        if (active_element)
         {
-            document.getElementsByClassName("lln-vertical-view-sub lln-with-play-btn active")[0].classList.remove("active")
+            active_element.classList.remove("active")
         }
 
         const active_side_bar_subtitile = document.getElementsByClassName('anki-active-sidebar-sub');
@@ -225,7 +219,7 @@
             }
             //console.log("youtube video id : ", video_id);
 
-            const video_element = document.querySelector(".video-stream");
+            const video_element = document.getElementsByClassName("video-stream")[0];
             if (!video_element)
             {
                 alert("Where has the video element went?");
@@ -274,7 +268,7 @@
         if (window.location.href.includes("youtube.com/watch"))
         {
             const canvas = document.createElement('canvas');
-            const video = document.querySelector('video');
+            const video = document.getElementsByTagName('video')[0];
             const ctx = canvas.getContext('2d');
 
             // Change the size here
@@ -725,19 +719,16 @@
 
         console.log("body : ", body);
 
-        const permission_data = {
-            "action": "requestPermission",
-            "version": 6,
-        };
+        const permission_data = '{"action":"requestPermission","version":6}';
 
         fetch(anki_settings.url, {
             method: "POST",
-            body: JSON.stringify(permission_data),
+            body: permission_data,
         })
             .then((res) => res.json())
             .then((data) =>
             {
-                console.log(data);
+                console.log("Permission fetch return : ", data);
                 fetch(anki_settings.url, {
                     method: "POST",
                     body: JSON.stringify(body),

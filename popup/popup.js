@@ -30,12 +30,13 @@ const g_anki_field_keys = Object.keys(g_ankiFields);
 let g_anki_field_elements = {}; // NOTE : Is it really worth it to pre-fetch all elements? 
 
 const g_fields_in_storage = [
+    "ankiHighLightSavedWords",
+
     "ankiConnectUrl",
     "ankiDeckNameSelected",
     "ankiNoteNameSelected",
 
     "ankiExampleSentenceSource",
-    "ankiHighLightSavedWords",
     "ankiHighLightColour",
 
     ...g_anki_field_keys,
@@ -68,7 +69,9 @@ function init()
     submit_element.addEventListener('click', (e) =>
     {
         let save_data = {};
-        for (const index in g_fields_in_storage)
+        
+        // Why 1? skip over "ankiHighLightSavedWords" check box, as its handled bellow ;)
+        for (let index = 1; index < g_fields_in_storage.length; index++)
         {
             const field_name = g_fields_in_storage[index];
             const value = document.getElementById(field_name).value;
@@ -78,12 +81,17 @@ function init()
             save_data[field_name] = value;
         }
 
+        save_data.ankiHighLightSavedWords = document.getElementById('ankiHighLightSavedWords').checked;
+
+        console.log("Updating saved data", save_data);
+
         chrome.storage.local.set(save_data, () =>
         {
             if (chrome.runtime.lastError)
             {
                 alert("Error saving to storage:", chrome.runtime.lastError);
-            } else
+            }
+            else
             {
                 alert(`Options saved!`);
             }

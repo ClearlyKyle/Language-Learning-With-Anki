@@ -44,7 +44,7 @@ Settings allow you to choose which fields are filled with what data. A blank opt
 
 ## Poissible Errors
 
-`Acess to fetch at 'http://localhost:8765' from origin 'https://www.netflix.com' has been blocked by CORS policy`
+- `Acess to fetch at 'http://localhost:8765' from origin 'https://www.netflix.com' has been blocked by CORS policy`
 
 You need to make sure Netflix and Youtube are add to the "webCorsOriginList" in your AnkiConnect config. To do this, go to:
 
@@ -58,3 +58,7 @@ Example of "webCorsOriginList"
         "https://www.youtube.com"
     ]
 ```
+
+- `cannot create note because it is empty`
+
+Make sure the field at position 1 in your Anki note type (Tools > Manage Note Types) is set to a value in the extentions settings page, if not, then you will get this error. See [also](https://github.com/ClearlyKyle/Language-Learning-With-Anki/issues/7#issuecomment-2510020695)

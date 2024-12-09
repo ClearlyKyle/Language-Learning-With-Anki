@@ -13,6 +13,7 @@ if (!CONSOLE_LOGGING)
 // GLOBALS
 //
 let anki_url = 'http://localhost:8765';
+const anki_field_elements = {}; // saved elements, to reduce calls to getElementById
 
 // These are the names of the field elements in the html, they must match!
 // The elements we want to be filled with the list of field names
@@ -45,8 +46,6 @@ const anki_id_names = [
 //    ...
 //}
 let anki_storage_values = Object.fromEntries(anki_id_names.map((key) => [key, ""]));
-
-const anki_field_elements = {}; // saved elements, to reduce calls to getElementById
 
 //
 // STARTUP
@@ -95,6 +94,8 @@ function init()
             }
         });
     });
+
+
 
     chrome.storage.local.get(["ankiConnectUrl"], ({ ankiConnectUrl }) =>
     {
@@ -156,24 +157,30 @@ function Add_Options_To_Dropdown(dropdown, data)
     }
 }
 
-function Add_Options_To_Field_Dropdown(element_id, data, saved_value)
+function Add_Options_To_Field_Dropdown_Promise(element_id, data, saved_value)
 {
-    const dropdown = anki_field_elements[element_id];
-
-    dropdown.length = 0;
-
-    for (let i = 0; i < data.length; i++)
+    return new Promise((resolve, reject) =>
     {
-        const option = document.createElement('option');
-        option.value = option.text = data[i];
-        dropdown.add(option);
-    }
+        console.log("Calling this promuse", data);
+        const dropdown = anki_field_elements[element_id];
 
-    const blank = document.createElement("option");
-    blank.value = blank.text = "";
-    dropdown.add(blank);
+        dropdown.length = 0;
 
-    dropdown.value = saved_value;
+        for (let i = 0; i < data.length; i++)
+        {
+            const option = document.createElement('option');
+            option.value = option.text = data[i];
+            dropdown.add(option);
+        }
+
+        const blank = document.createElement("option");
+        blank.value = blank.text = "";
+        dropdown.add(blank);
+
+        dropdown.value = saved_value;
+
+        resolve();
+    });
 }
 
 function Update_Selections_With_Saved_Values()
@@ -225,21 +232,19 @@ function Update_Field_Dropdown()
 {
     const note_names_element = anki_field_elements.ankiNoteNameSelected;
 
-    const note_field_body = `{"action": "modelFieldNames","params":{"modelName":"${note_names_element.value}"}}`;
+    // NOTE : if we switch to another note type that has the same named field, they will not be reset
 
-    Fetch_From_Anki(note_field_body)
-        .then((data) =>
+    Fetch_From_Anki(`{"action": "modelFieldNames","params":{"modelName":"${note_names_element.value}"}}`)
+        .then(async (data) =>
         {
-            // NOTE : if we switch to another note type that has the same named field, they will not be reset
             if (data.length)
             {
-                for (let i = 0; i < anki_field_names.length; i++)
+                // NOTE : is there a way to only generate this map once?
+                const anki_field_promises = anki_field_names.map((field_name) =>
                 {
-                    const field_name = anki_field_names[i];
                     console.log(`Dropdown '${field_name}', with set value '${anki_storage_values[field_name]}'`);
-
-                    Add_Options_To_Field_Dropdown(field_name, data, anki_storage_values[field_name]);
-                }
+                    Add_Options_To_Field_Dropdown_Promise(field_name, data, anki_storage_values[field_name]);
+                });
             }
         })
         .catch(error => console.error("Unable to model fields", error));

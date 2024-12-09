@@ -13,6 +13,8 @@ if (!CONSOLE_LOGGING)
 // GLOBALS
 //
 let anki_url = 'http://localhost:8765';
+let anki_field_data = {};
+let anki_field_promises = {};
 const anki_field_elements = {}; // saved elements, to reduce calls to getElementById
 
 // These are the names of the field elements in the html, they must match!
@@ -95,7 +97,13 @@ function init()
         });
     });
 
-
+    anki_field_promises = anki_field_names.map((field_name) =>
+    {
+        return () =>
+        {
+            return Add_Options_To_Field_Dropdown_Promise(field_name, anki_field_data, anki_storage_values[field_name]);
+        };
+    });
 
     chrome.storage.local.get(["ankiConnectUrl"], ({ ankiConnectUrl }) =>
     {
@@ -232,19 +240,14 @@ function Update_Field_Dropdown()
 {
     const note_names_element = anki_field_elements.ankiNoteNameSelected;
 
-    // NOTE : if we switch to another note type that has the same named field, they will not be reset
-
     Fetch_From_Anki(`{"action": "modelFieldNames","params":{"modelName":"${note_names_element.value}"}}`)
-        .then(async (data) =>
+        .then((data) =>
         {
+            // NOTE : if we switch to another note type that has the same named field, they will not be reset
             if (data.length)
             {
-                // NOTE : is there a way to only generate this map once?
-                const anki_field_promises = anki_field_names.map((field_name) =>
-                {
-                    console.log(`Dropdown '${field_name}', with set value '${anki_storage_values[field_name]}'`);
-                    Add_Options_To_Field_Dropdown_Promise(field_name, data, anki_storage_values[field_name]);
-                });
+                anki_field_data = data;
+                Promise.all(anki_field_promises.map((func) => func()));
             }
         })
         .catch(error => console.error("Unable to model fields", error));

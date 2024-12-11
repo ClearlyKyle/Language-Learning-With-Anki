@@ -327,6 +327,7 @@
 
     // NOTE : This wont be presist between page loads
     let SCREENSHOT_FILENAMES = [];
+    let AUDIO_FILENAMES = [];
 
     async function Get_Audio()
     {
@@ -467,12 +468,6 @@
                         console.log(`${image_filename} already exists.`);
                     }
 
-                    if (ankiFieldURL)
-                    {
-                        console.log("Fill ankiFieldURL");
-
-                        card_data[ankiFieldURL] = video_url;
-                    }
 
                     card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
                 }
@@ -482,15 +477,26 @@
                 {
                     console.log("Fill ankiAudioSelected");
 
-                    const audio_filename = 'Youtube2Anki_audio_' + Math.random().toString(36).substring(7) + '.webm';
+                    // TODO : Need better method than using current time 
+                    const audio_filename = `Youtube2Anki_${video_id}_${video_current_time}.webm`;
 
-                    // TODO : Only get audio once for any given subtitle
+                    if (!AUDIO_FILENAMES.includes(audio_filename))
+                    {
+                        AUDIO_FILENAMES.push(audio_filename);
+
+                        console.log(`${audio_filename} added to screenshot list`);
+                    }
+                    else
+                    {
+                        console.log(`${audio_filename} already exists.`);
+                    }
+
                     const audio_raw_data = await Get_Audio();
 
                     audio_data['data'] = audio_raw_data;
                     audio_data['filename'] = audio_filename;
 
-                    card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']'; 
+                    card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
                 }
 
                 /* the popup dictionary window */

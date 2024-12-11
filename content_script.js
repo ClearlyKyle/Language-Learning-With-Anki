@@ -438,6 +438,13 @@
 
                 [video_url, video_id, video_current_time] = Get_Video_URL();
 
+                if (ankiFieldURL)
+                {
+                    console.log("Fill ankiFieldURL");
+
+                    card_data[ankiFieldURL] = video_url;
+                }
+
                 if (ankiFieldScreenshotSelected) 
                 {
                     console.log("Fill ankiFieldScreenshotSelected");

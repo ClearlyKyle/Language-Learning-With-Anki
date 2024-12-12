@@ -9,10 +9,14 @@
         console.log = function () { };
     }
 
-    /* This runs on all "youtube" and "netflix" web pages */
-    console.log("[MAIN] Adding button...")
-
+    //
+    // GLOBALS
+    //
+    // NOTE : This wont be presist between page loads
+    let SCREENSHOT_FILENAMES = [];
+    let AUDIO_FILENAMES = [];
     let lln_search_class_name = "";
+
     if (window.location.href.includes("netflix"))
     {
         lln_search_class_name = "lln-netflix";
@@ -27,17 +31,17 @@
         return;
     }
 
-    // we loop for the body to had the correct "lln" class name set
+    // We loop for the body to had the correct "lln" class name set
     let check_dict_wrap_exists = setInterval(function ()
     {
         const lln_element = document.getElementsByClassName(lln_search_class_name)[0];
         if (lln_element)
         {
             clearInterval(check_dict_wrap_exists);
-            console.log("'" + lln_search_class_name + "' has been found...")
+            console.log(`'${lln_search_class_name}' class has been found!`)
 
             Add_Functions_To_Side_Bar_Subs();
-            //Highlight_Words();
+            // Highlight_Words();
 
             let dict_wrap_observer = new MutationObserver(function (mutations)
             {
@@ -51,7 +55,7 @@
                             if (new_elem.classList.contains('lln-full-dict'))
                             {
                                 // the dictionary has been opened so we add the Anki button to it
-                                console.log("dictionary has been loaded...");
+                                console.log("Dictionary open, adding Anki button");
                                 Add_Anki_Button_To_Popup_Dictionary();
                                 break;
                             }
@@ -60,23 +64,21 @@
                     }
                 }
             });
-            dict_wrap_observer.observe(lln_element,
-                {
-                    attributes: true,
-                    childList: true,
-                    subtree: true
-                }
-            );
+            dict_wrap_observer.observe(lln_element, {
+                attributes: true,
+                childList: true,
+                subtree: true
+            });
         }
     }, 100); // check every 100ms 
 
-    // create Anki button
+    // Create Anki button
     const anki_div = document.createElement("div");
     anki_div.className = "anki-btn lln-external-dict-btn tippy";
     anki_div.innerHTML = "Anki";
     anki_div.setAttribute("data-tippy-content", "Send to Anki");
 
-    // create Remove Highlighted word button
+    // Create Remove Highlighted word button
     const remove_highlight = document.createElement("div");
     remove_highlight.className = "remove_highlight-btn lln-external-dict-btn tippy";
     remove_highlight.innerHTML = "RC";
@@ -88,7 +90,7 @@
         const btn_location = document.getElementsByClassName('lln-external-dicts-container')[0];
         if (!btn_location)
         {
-            console.log("Error finding element 'lln-external-dicts-container', unable to add the Anki button");
+            console.warn("Error finding element 'lln-external-dicts-container', unable to add the Anki button");
             return;
         }
 
@@ -97,7 +99,7 @@
         {
             anki_div.onclick = popup_dict_element.classList.contains("right") ?
                 Handle_Jump_To_Subtitle_With_Sidebar :
-                Subtitle_Dictionary_GetData;
+                Subtitle_Dictionary_Get_Data;
         }
 
         btn_location.append(anki_div, remove_highlight);
@@ -157,7 +159,7 @@
         // to anki
         console.log("[Handle_Subtitle_Dictionary] Side Bar Dictionary has been clicked...")
 
-        // if there is no current "active" subtitle, then we cannot remove the "active"
+        // If there is no current "active" subtitle, then we cannot remove the "active"
         let active_element = document.querySelector('.lln-vertical-view-sub.lln-with-play-btn.active');
         if (active_element)
         {
@@ -171,11 +173,11 @@
             // NOTE : This might be different on Netflix...
             const video_element = document.getElementsByTagName('video')[0];
 
-            // add "active" to the current "anki-active-sidebar-sub", "anki-active-sidebar-sub" is set when we
+            // Add "active" to the current "anki-active-sidebar-sub", "anki-active-sidebar-sub" is set when we
             // click on a word in the sidebar
             active_side_bar_subtitile[0].classList.add("active");
 
-            // jump video to the subtitle with the word we want
+            // Jump video to the subtitle with the word we want
             document.querySelector('.anki-onclick.active').click();
 
             console.log("[Handle_Jump_To_Subtitle_With_Sidebar] pause the video!")
@@ -188,13 +190,13 @@
                 if (video_element.readyState === 4)
                 {
                     clearInterval(checkExist)
-                    Subtitle_Dictionary_GetData();
+                    Subtitle_Dictionary_Get_Data();
                 }
             }, 250);
         }
         else
         {
-            console.log("Handle_Jump_To_Subtitle_With_Sidebar - Error with 'anki-active-sidebar-sub'");
+            console.warn("Handle_Jump_To_Subtitle_With_Sidebar - Error with 'anki-active-sidebar-sub'");
         }
     }
 
@@ -217,18 +219,18 @@
             {
                 video_id = rawid;
             }
-            //console.log("youtube video id : ", video_id);
 
             const video_element = document.getElementsByClassName("video-stream")[0];
             if (!video_element)
             {
-                alert("Where has the video element went?");
+                console.warn("Where has the video element went?");
             }
             else
             {
                 current_time = video_element.currentTime;
 
-                time_stamped_url = "https://youtu.be/" + video_id + "?t=" + current_time.toFixed(); /* example: https://youtu.be/RksaXQ4C1TA?t=123 */
+                // example: https://youtu.be/RksaXQ4C1TA?t=123
+                time_stamped_url = "https://youtu.be/" + video_id + "?t=" + current_time.toFixed();
             }
         }
         else if (window.location.href.includes("netflix.com/watch"))
@@ -241,23 +243,23 @@
             {
                 video_id = match[1];
             }
-            //console.log("netflix video id : ", video_id);
 
             const video_element = document.querySelector(".video");
             if (!video_element)
             {
-                alert("Where has the video element went?");
+                console.warn("Where has the video element went?");
             }
             else
             {
                 current_time = video_element.currentTime;
 
-                time_stamped_url = "https://www.netflix.com/watch/" + video_id + "?t=" + current_time.toFixed(); // https://www.netflix.com/watch/70196252?t=349
+                // https://www.netflix.com/watch/70196252?t=349
+                time_stamped_url = "https://www.netflix.com/watch/" + video_id + "?t=" + current_time.toFixed();
             }
         }
         else
         {
-            console.log("What website are we on?");
+            console.error("What website are we on?");
         }
 
         return [time_stamped_url, video_id, current_time];
@@ -277,11 +279,10 @@
 
             ctx.drawImage(video, 0, 0, 640, 360);
 
-            let dataURL = canvas.toDataURL("image/png");
-            dataURL = dataURL.replace(/^data:image\/(png|jpg);base64,/, "")
+            let image_data = canvas.toDataURL("image/png");
+            image_data = image_data.replace(/^data:image\/(png|jpg);base64,/, "")
 
-            //return [canvas.width, canvas.height, dataURL];
-            return Promise.resolve([canvas.width, canvas.height, dataURL]);
+            return Promise.resolve(image_data);
         }
         else if (window.location.href.includes("netflix.com/watch"))
         {
@@ -309,7 +310,7 @@
                             img.onload = function () 
                             {
                                 const image_data = img.src.replace(/^data:image\/(png|jpg);base64,/, "");
-                                resolve([img.width, img.height, image_data]);
+                                resolve(image_data);
                             };
                             img.src = response.imageData;
                         }
@@ -325,81 +326,92 @@
         return Promise.resolve([100, 100, 0]);
     }
 
-    // NOTE : This wont be presist between page loads
-    let SCREENSHOT_FILENAMES = [];
-    let AUDIO_FILENAMES = [];
-
     async function Get_Audio()
     {
-        // YOUTUBE URL
+        let video_element = null;
+
+        // NOTE : URL and Sreenshot functions use this too, set global instead?
         if (window.location.href.includes("youtube.com/watch"))
         {
-            const video_element = document.querySelector('video');
-            if (!video_element)
-            {
-                alert('No video element found!');
-                return null;
-            }
+            video_element = document.getElementsByTagName('video')[0];
+        }
+        else if (window.location.href.includes("netflix.com/watch"))
+        {
+            video_element = document.querySelector(".video");
+        }
 
-            // Start capturing the audio track
-            const stream = video_element.captureStream();
-            const audioStream = new MediaStream(stream.getAudioTracks());
+        if (!video_element)
+        {
+            console.warn("No video element found to get audio");
+            return;
+        }
 
-            // Create a MediaRecorder to record the audio
-            const recorder = new MediaRecorder(audioStream);
-            const chunks = [];
+        const audio_play_button = document.getElementsByClassName('lln-subs-replay-btn')[0];
+        if (!audio_play_button)
+        {
+            console.warn("No subtitle audio play button!");
+            return;
+        }
 
-            recorder.ondataavailable = event => chunks.push(event.data);
-            const audio_promise = new Promise((resolve, reject) =>
-            {
-                recorder.onstop = () =>
-                {
-                    const blob = new Blob(chunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onloadend = () =>
-                    {
-                        const base64Audio = reader.result.split(',')[1];
-                        resolve(base64Audio);
-                    };
-                    reader.readAsDataURL(blob);
-                };
-            });
-
-
-            let auto_stop_initial_state = false; // Should we even bother saving this?
-            let auto_pause_element = document.getElementsByClassName('lln-toggle')[0];
-
+        let auto_stop_initial_state = false; // Should we even bother saving this?
+        let auto_pause_element = document.getElementsByClassName('lln-toggle')[0];
+        if (auto_pause_element)
+        {
+            auto_stop_initial_state = auto_pause_element.checked;
             if (!auto_stop_initial_state)
             {
-                auto_pause_element.click() // turn on autopause
-                console.log("Autopause has been turned on (on)");
+                auto_pause_element.click() // Turn on autopause
+                console.log("Autopause has been turned ON");
             }
-
-            // click the "replay subtitle button"
-            document.getElementsByClassName('lln-subs-replay-btn')[0].click();
-            recorder.start();
-
-            video_element.addEventListener('timeupdate', function onTimeUpdate()
-            {
-                if (video_element.paused && video_element.readyState === 4)
-                {
-                    recorder.stop();
-                    console.log("Audio recording stop")
-                    video_element.removeEventListener('timeupdate', onTimeUpdate);
-
-                    //auto_pause_element = auto_stop_initial_state;
-                    //if (!auto_stop_initial_state)
-                    //{
-                    //    auto_pause_element.click() // toggle autopause back off
-                    //}
-                }
-            });
-
-            return await audio_promise;
         }
+
+        // Start capturing the audio track
+        const stream = video_element.captureStream();
+        const audioStream = new MediaStream(stream.getAudioTracks());
+
+        // Create a MediaRecorder to record the audio
+        const recorder = new MediaRecorder(audioStream);
+        const chunks = [];
+
+        recorder.ondataavailable = event => chunks.push(event.data);
+        const audio_promise = new Promise((resolve, reject) =>
+        {
+            recorder.onstop = () =>
+            {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.onloadend = () =>
+                {
+                    const audio_data = reader.result.split(',')[1];
+                    resolve(audio_data);
+                };
+                reader.readAsDataURL(blob);
+            };
+        });
+
+        video_element.addEventListener('timeupdate', function onTimeUpdate()
+        {
+            if (video_element.paused && video_element.readyState === 4)
+            {
+                recorder.stop();
+                console.log("Audio recording stop")
+                video_element.removeEventListener('timeupdate', onTimeUpdate);
+
+                if (!auto_stop_initial_state)
+                {
+                    auto_pause_element.click() // Turn off autopause
+                    console.log("Autopause has been turned back OFF");
+                }
+                video_element.pause();
+            }
+        });
+
+        audio_play_button.click();
+        recorder.start();
+
+        return audio_promise;
     }
 
-    async function Subtitle_Dictionary_GetData() // This is where we pull all the data we want from the popup dictionary
     {
         chrome.storage.local.get(
             [
@@ -431,7 +443,7 @@
                 ankiConnectUrl,
                 ankiExampleSentenceSource }) =>
             {
-                console.log("[Subtitle_Dictionary_GetData] Getting Data for Anki...");
+                console.log("[Subtitle_Dictionary_Get_Data] Getting Data for Anki...");
 
                 let card_data = {};
                 let image_data = {};
@@ -452,13 +464,13 @@
 
                     const image_filename = `Youtube2Anki_${video_id}_${video_current_time}.png`;
 
-                    if (!SCREENSHOT_FILENAMES.includes(image_filename)) // not in our list
+                    if (!SCREENSHOT_FILENAMES.includes(image_filename))
                     {
                         SCREENSHOT_FILENAMES.push(image_filename);
 
                         console.log(`${image_filename} added to screenshot list`);
 
-                        const [image_width, image_height, captured_image_data] = await Get_Screenshot();
+                        const captured_image_data = await Get_Screenshot();
 
                         image_data['data'] = captured_image_data;
                         image_data['filename'] = image_filename;
@@ -472,39 +484,12 @@
                     card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
                 }
 
-                // get audio for subtitle we are on
-                if (ankiAudioSelected)
-                {
-                    console.log("Fill ankiAudioSelected");
-
-                    // TODO : Need better method than using current time 
-                    const audio_filename = `Youtube2Anki_${video_id}_${video_current_time}.webm`;
-
-                    if (!AUDIO_FILENAMES.includes(audio_filename))
-                    {
-                        AUDIO_FILENAMES.push(audio_filename);
-
-                        console.log(`${audio_filename} added to screenshot list`);
-                    }
-                    else
-                    {
-                        console.log(`${audio_filename} already exists.`);
-                    }
-
-                    const audio_raw_data = await Get_Audio();
-
-                    audio_data['data'] = audio_raw_data;
-                    audio_data['filename'] = audio_filename;
-
-                    card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
-                }
-
-                /* the popup dictionary window */
+                // The popup dictionary window
                 let selected_word = "";
                 const dict_context = document.getElementsByClassName('lln-dict-contextual');
                 if (dict_context.length)
                 {
-                    /* Get word selected */
+                    // Get word selected
                     selected_word = dict_context[0].children[1].innerText;
 
                     if (ankiWordSelected)
@@ -515,7 +500,7 @@
                         //Store_Word_In_Chrome(selected_word); // Used for highliting words used in cards
                     }
 
-                    /* Get basic translation (this is top of the popup dic) */
+                    // Get basic translation (this is top of the popup dic)
                     if (ankiBasicTranslationSelected)
                     {
                         console.log("Fill ankiBasicTranslationSelected");
@@ -528,7 +513,7 @@
                     }
                 }
 
-                /* Get full definition (this is the difinitions provided bellow the AI part) */
+                // Get full definition (this is the difinitions provided bellow the AI part)
                 if (ankiOtherTranslationSelected)
                 {
                     const full_definition_element = document.getElementsByClassName('lln-dict-section-full');
@@ -540,7 +525,6 @@
                     }
                 }
 
-                /* Get the subtitle text */
                 if (ankiSubtitleSelected)
                 {
                     console.log("Fill ankiSubtitleSelected");
@@ -552,15 +536,15 @@
 
                         card_data[ankiSubtitleSelected] = subtitle;
 
-                        if (selected_word) // if we are storing the word too, we will highlight in the subtitle
+                        if (selected_word) // If we are storing the word too, we will highlight in the subtitle
                         {
-                            // make selected word bold in the subtitles, might not work for all languages :(
+                            // Make selected word bold in the subtitles, might not work for all languages :(
                             card_data[ankiSubtitleSelected] = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${selected_word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + selected_word + "</b>");
                         }
                     }
                 }
 
-                /* Get the translation text (will fail if its not loaded) */
+                // Get the translation text (will fail if its not loaded)
                 if (ankiSubtitleTranslation)
                 {
                     console.log("Fill ankiSubtitleTranslation");
@@ -574,7 +558,6 @@
 
                 // Getting Example sentences 
                 // There are two sets of example sentences, so we can choose between which set we want
-                // const ankiExampleSentenceSource = "Both";
                 if (ankiExampleSentencesSelected)
                 {
                     console.log("Fill ankiExampleSentencesSelected, from", ankiExampleSentenceSource);
@@ -620,6 +603,39 @@
                     }
                 }
 
+                // Get audio for subtitle we are on, do it last, as sometimes we can run past the end of the
+                // subtitle we want, then we end up saving the next subtitle instead.
+                if (ankiAudioSelected)
+                {
+                    console.log("Fill ankiAudioSelected");
+
+                    let sub_index = 0;
+                    const element = document.querySelector('#lln-subs');
+                    if (element)
+                    {
+                        sub_index = element.dataset.index;
+                    }
+                    const audio_filename = `Youtube2Anki_${video_id}_${sub_index}.webm`;
+
+                    if (!AUDIO_FILENAMES.includes(audio_filename))
+                    {
+                        AUDIO_FILENAMES.push(audio_filename);
+
+                        console.log(`${audio_filename} added to screenshot list`);
+
+                        const audio_raw_data = await Get_Audio();
+
+                        audio_data['data'] = audio_raw_data;
+                        audio_data['filename'] = audio_filename;
+                    }
+                    else
+                    {
+                        console.log(`${audio_filename} already exists.`);
+                    }
+
+                    card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
+                }
+
                 console.log("Card data to send to Anki : ", card_data);
 
                 const anki_settings = {
@@ -644,9 +660,6 @@
             {
                 clearInterval(wait_for_subtitle_list);
 
-                const sub_list_element = document.getElementById("lln-vertical-view-subs");
-
-                // Create a MutationObserver to observe changes in the div
                 const sub_list_observer = new MutationObserver(function (mutations) 
                 {
                     mutations.forEach(function (mutation) 
@@ -663,13 +676,10 @@
                                     const parent_with_data_index = event.target.parentNode.parentNode;
 
                                     // Set current "data-index" as the "anki-active-sidebar-sub"
-                                    //const index_id = current_element.getAttribute("data-index");
-                                    //document.querySelector("[data-index=\"" + index_id + "\"]").classList.add("anki-active-sidebar-sub")
-
                                     if (parent_with_data_index.classList.contains("anki-active-sidebar-sub"))
                                         return;
 
-                                    // we need to search for any element other than the current one that has 
+                                    // We need to search for any element other than the current one that has 
                                     // the classname 'anki-active-sidebar-sub'
                                     const elem_with_anki_active = document.getElementsByClassName("anki-active-sidebar-sub")[0];
 
@@ -898,7 +908,7 @@
                 background: "red",
             }
         }).showToast();
-        console.log(message);
+        console.error(message);
     }
 
 })();

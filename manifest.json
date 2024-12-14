@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "LLW to Anki",
     "description": "Save words from languagereactor video subtitles and send to Anki",
-    "version": "3.0",
+    "version": "3.1",
     "author": "@clearlykyle",
     "permissions": [
         "storage"

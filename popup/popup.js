@@ -83,7 +83,7 @@ function init()
         anki_storage_values["ankiHighLightSavedWords"] = anki_field_elements.ankiHighLightSavedWords.checked;
         anki_storage_values["ankiHighLightColour"] = anki_field_elements.ankiHighLightColour.value;
 
-        anki_storage_values;
+        console.log(anki_storage_values);
 
         chrome.storage.local.set(anki_storage_values, () =>
         {

@@ -3,7 +3,7 @@
     console.log("----- [content_script.js] LOADED");
 
     // Toggle the console output on and off
-    const CONSOLE_LOGGING = false;
+    const CONSOLE_LOGGING = true;
     if (!CONSOLE_LOGGING)
     {
         console.log = function () { };
@@ -41,20 +41,18 @@
             console.log(`'${lln_search_class_name}' class has been found!`)
 
             Add_Functions_To_Side_Bar_Subs();
-            // Highlight_Words();
+            Highlight_Words_Setup();
 
             let dict_wrap_observer = new MutationObserver(function (mutations)
             {
                 for (let mutation of mutations)
                 {
-                    // look for either the subtitle dictionary clicked or the side bar dictionary first clicked
                     for (let new_elem of mutation.addedNodes)
                     {
                         if (new_elem instanceof HTMLElement)
                         {
                             if (new_elem.classList.contains('lln-full-dict'))
                             {
-                                // the dictionary has been opened so we add the Anki button to it
                                 console.log("Dictionary open, adding Anki button");
                                 Add_Anki_Button_To_Popup_Dictionary();
                                 break;
@@ -70,7 +68,7 @@
                 subtree: true
             });
         }
-    }, 100); // check every 100ms 
+    }, 100);
 
     // Create Anki button
     const anki_div = document.createElement("div");
@@ -83,7 +81,7 @@
     remove_highlight.className = "remove_highlight-btn lln-external-dict-btn tippy";
     remove_highlight.innerHTML = "RC";
     remove_highlight.setAttribute("data-tippy-content", "Remove word from being highlighted");
-    remove_highlight.onclick = Remove_Word_From_Highlight_List;
+    remove_highlight.onclick = Highlight_Words_Remove_Word;
 
     function Add_Anki_Button_To_Popup_Dictionary()
     {
@@ -103,53 +101,6 @@
         }
 
         btn_location.append(anki_div, remove_highlight);
-    }
-
-    function Remove_Word_From_Highlight_List()
-    {
-        console.log("[Remove_Word_From_Highlight_List] Get current word and remove from saved list of words")
-
-        // Get currently clicked word..
-        let word = "";
-        const word_element = document.getElementsByClassName('lln-dict-contextual');
-        if (word_element.length)
-        {
-            if (word_element[0].childElementCount === 4)
-            {
-                word = word_element[0].children[1].innerText;
-            }
-            else if (word_element[0].childElementCount === 3)
-            {
-                word = word_element[0].children[0].innerText;
-            }
-        }
-        else
-        {
-            console.log("[Remove_Word_From_Highlight_List] Cannot get word from subtitle");
-            return;
-        }
-
-        // Get the current list of stored words
-        if (word !== "")
-        {
-            chrome.storage.local.get({ user_saved_words: [] }, function (result)
-            {
-                // Then we add the new word to the current stored list
-                const words = result.user_saved_words;
-
-                const index = words.indexOf(word.toLowerCase());
-                if (index > -1)
-                {
-                    words.splice(index, 1);
-                }
-
-                // Save the list back to chrome
-                chrome.storage.local.set({ user_saved_words: words }, () =>
-                {
-                    Update_Subtitle_Highlighting_Words();
-                });
-            });
-        }
     }
 
     function Handle_Jump_To_Subtitle_With_Sidebar()
@@ -198,6 +149,56 @@
         {
             console.warn("Handle_Jump_To_Subtitle_With_Sidebar - Error with 'anki-active-sidebar-sub'");
         }
+    }
+
+    function Add_Functions_To_Side_Bar_Subs()
+    {
+        console.log("[Add_Functions_To_Side_Bar_Subs] Adding all 'onclick' events...")
+
+        let wait_for_subtitle_list = setInterval(function () 
+        {
+            const sub_list_element = document.getElementById("lln-vertical-view-subs");
+            if (sub_list_element) 
+            {
+                clearInterval(wait_for_subtitle_list);
+
+                const sub_list_observer = new MutationObserver(function (mutations) 
+                {
+                    mutations.forEach(function (mutation) 
+                    {
+                        let elements_in_view = document.querySelectorAll('.in-scroll');
+
+                        elements_in_view.forEach(function (element) 
+                        {
+                            if (!element.classList.contains("anki-onclick")) 
+                            {
+                                element.classList.add("anki-onclick");
+                                element.onclick = function (event) 
+                                {
+                                    const parent_with_data_index = event.target.parentNode.parentNode;
+
+                                    // Set current "data-index" as the "anki-active-sidebar-sub"
+                                    if (parent_with_data_index.classList.contains("anki-active-sidebar-sub"))
+                                        return;
+
+                                    // We need to search for any element other than the current one that has 
+                                    // the classname 'anki-active-sidebar-sub'
+                                    const elem_with_anki_active = document.getElementsByClassName("anki-active-sidebar-sub")[0];
+
+                                    if (elem_with_anki_active)
+                                    {
+                                        elem_with_anki_active.classList.remove("anki-active-sidebar-sub")
+                                    }
+                                    parent_with_data_index.classList.add("anki-active-sidebar-sub");
+                                };
+                            }
+                        });
+                    });
+                });
+
+                sub_list_observer.observe(sub_list_element, { attributes: true, attributeFilter: ['class'] });
+            }
+        }, 100);
     }
 
     function Get_Video_URL()
@@ -394,7 +395,9 @@
             if (video_element.paused && video_element.readyState === 4)
             {
                 recorder.stop();
-                console.log("Audio recording stop")
+                clearTimeout(audio_recording_timeout);
+
+                console.log("Audio recording stopped")
                 video_element.removeEventListener('timeupdate', onTimeUpdate);
 
                 if (!auto_stop_initial_state)
@@ -406,12 +409,28 @@
             }
         });
 
+        const audio_recording_timeout = setTimeout(() =>
+        {
+            recorder.stop();
+            console.warn("Audio recording stopped after 5 seconds");
+
+            video_element.removeEventListener('timeupdate', onTimeUpdate);
+
+            if (!auto_stop_initial_state)
+            {
+                auto_pause_element.click(); // Turn off autopause
+                console.log("Autopause has been turned back OFF");
+            }
+        }, 16000); // 16000ms = 16 seconds
+
+        console.log("Audio recording started");
         audio_play_button.click();
         recorder.start();
 
         return audio_promise;
     }
 
+    async function Subtitle_Dictionary_Get_Data() // This is where we pull all the data we want from the popup dictionary
     {
         chrome.storage.local.get(
             [
@@ -427,7 +446,9 @@
                 "ankiAudioSelected",
                 "ankiFieldURL",
                 "ankiConnectUrl",
-                "ankiExampleSentenceSource"],
+                "ankiExampleSentenceSource",
+                "ankiHighLightSavedWords",
+            ],
             async ({
                 ankiDeckNameSelected,
                 ankiNoteNameSelected,
@@ -441,7 +462,9 @@
                 ankiAudioSelected,
                 ankiFieldURL,
                 ankiConnectUrl,
-                ankiExampleSentenceSource }) =>
+                ankiExampleSentenceSource,
+                ankiHighLightSavedWords,
+            }) =>
             {
                 console.log("[Subtitle_Dictionary_Get_Data] Getting Data for Anki...");
 
@@ -491,6 +514,17 @@
                 {
                     // Get word selected
                     selected_word = dict_context[0].children[1].innerText;
+
+                    if (ankiHighLightSavedWords)
+                    {
+                        console.log("Fill ankiHighLightSavedWords new word");
+                        if (!anki_saved_words.includes(selected_word))
+                        {
+                            anki_saved_words.push(selected_word);
+
+                            Highlight_Words_Store();
+                        }
+                    }
 
                     if (ankiWordSelected)
                     {
@@ -569,7 +603,6 @@
                         switch (ankiExampleSentenceSource)
                         {
                             case "Both":
-                                // Convert HTMLCollections to arrays and remove the first element from each
                                 if (example_sentences_element[0]) 
                                 {
                                     example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
@@ -591,7 +624,7 @@
                                 break;
                             case "None": // fallthrough
                             default:
-                                example_sentences_list = []; // Default case if none matches
+                                example_sentences_list = [];
                                 break;
                         }
 
@@ -649,136 +682,156 @@
         );
     }
 
-    function Add_Functions_To_Side_Bar_Subs()
+    //
+    // HIGHLIGHT WORDS
+    //
+    let anki_saved_words = [];
+    let anki_highlight_colour = "";
+    let anki_highlight_words = false;
+
+    // Here we are checking if the user toggles the highlighting words setting, this will save the user
+    // having to refresh the page to get or remove highlighting, same for the colour value
+    chrome.storage.onChanged.addListener(function (changes, areaName)
     {
-        console.log("[Add_Functions_To_Side_Bar_Subs] Adding all 'onclick' events...")
-
-        let wait_for_subtitle_list = setInterval(function () 
+        if (areaName === 'local') // or 'sync' if using sync storage
         {
-            const sub_list_element = document.getElementById("lln-vertical-view-subs");
-            if (sub_list_element) 
+            // oldValue, newValue, are special words, dont change them
+            for (let [key, { oldValue, newValue }] of Object.entries(changes))
             {
-                clearInterval(wait_for_subtitle_list);
-
-                const sub_list_observer = new MutationObserver(function (mutations) 
+                if (key === 'ankiHighLightSavedWords')
                 {
-                    mutations.forEach(function (mutation) 
-                    {
-                        let elements_in_view = document.querySelectorAll('.in-scroll');
+                    console.log(`${key} has changed from '${oldValue}' to '${newValue}'`);
+                    anki_highlight_words = newValue;
+                }
 
-                        elements_in_view.forEach(function (element) 
-                        {
-                            if (!element.classList.contains("anki-onclick")) 
-                            {
-                                element.classList.add("anki-onclick");
-                                element.onclick = function () 
-                                {
-                                    const parent_with_data_index = event.target.parentNode.parentNode;
-
-                                    // Set current "data-index" as the "anki-active-sidebar-sub"
-                                    if (parent_with_data_index.classList.contains("anki-active-sidebar-sub"))
-                                        return;
-
-                                    // We need to search for any element other than the current one that has 
-                                    // the classname 'anki-active-sidebar-sub'
-                                    const elem_with_anki_active = document.getElementsByClassName("anki-active-sidebar-sub")[0];
-
-                                    if (elem_with_anki_active)
-                                    {
-                                        elem_with_anki_active.classList.remove("anki-active-sidebar-sub")
-                                    }
-                                    parent_with_data_index.classList.add("anki-active-sidebar-sub");
-                                };
-                            }
-                        });
-                    });
-                });
-
-                sub_list_observer.observe(sub_list_element, { attributes: true, attributeFilter: ['class'] });
+                if (key === 'ankiHighLightColour')
+                {
+                    console.log(`${key} has changed from '${oldValue}' to '${newValue}'`);
+                    anki_highlight_colour = newValue;
+                }
             }
-        }, 100);
-    }
+        }
+    });
 
-    function Store_Word_In_Chrome(word_to_store)
+    function Highlight_Words_Setup()
     {
         // Get the current list of stored words
-        chrome.storage.local.get({ user_saved_words: [] }, function (result)
-        {
-            // Then we add the new word to the current stored list
-            let words = result.user_saved_words;
-            words.push(word_to_store.toLowerCase())
-
-            // Save the list back to chrome
-            chrome.storage.local.set({ user_saved_words: words }, () =>
+        chrome.storage.local.get(['user_saved_words', 'ankiHighLightColour', 'ankiHighLightSavedWords'],
+            ({ user_saved_words, ankiHighLightColour, ankiHighLightSavedWords }) =>
             {
-                Update_Subtitle_Highlighting_Words(); // Update the current subtitle with the newest words saved.
-            });
-        });
-    }
-
-    function Highlight_Words()
-    {
-        let wait_for_subtitles_to_show = setInterval(function ()
-        {
-            if (document.getElementById('lln-subs-content'))
-            {
-                clearInterval(wait_for_subtitles_to_show); // Stop timed interval
-
-                console.log("[Highlight_Words] Highlighting words in subtitle...")
-
-                let subtitle_observer = new MutationObserver(function (mutations)
+                if (!ankiHighLightSavedWords) 
                 {
-                    for (let mutation of mutations)
+                    console.log("No words will be highlighted");
+                    return;
+                }
+
+                anki_saved_words = user_saved_words;
+                anki_highlight_colour = ankiHighLightColour || 'LightCoral';
+                anki_highlight_words = true;
+
+                console.log("Highlight word settings:", { anki_saved_words, anki_highlight_colour, anki_highlight_words });
+
+                console.log("Waiting for subtitle content element...");
+                const wait_for_subtitles_to_show = setInterval(function ()
+                {
+                    const sub_content_element = document.getElementById('lln-subs-content');
+                    if (sub_content_element)
                     {
-                        if (mutation.addedNodes.length === 3)
+                        console.log("Subtitle content element found!");
+                        clearInterval(wait_for_subtitles_to_show);
+
+                        const observer = new MutationObserver((mutationList) =>
                         {
-                            Update_Subtitle_Highlighting_Words()
-                        }
-                        break;
+                            if (anki_highlight_words)
+                            {
+                                for (const mutation of mutationList)
+                                {
+                                    if (mutation.type === 'attributes')
+                                    {
+                                        const element = document.getElementById('lln-subs');
+                                        if (element)
+                                        {
+                                            console.log("We need to update the subtitle highlights");
+                                            Highlight_Words_In_Current_Subtitle();
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        observer.observe(sub_content_element, { attributes: true, subtree: true });
                     }
-                });
-                subtitle_observer.observe(document.getElementById('lln-subs-content'),
-                    {
-                        childList: true
-                    }
-                );
+                }, 100);
             }
-        }, 100);
+        );
     }
 
-    function Update_Subtitle_Highlighting_Words()
+    function Highlight_Words_In_Current_Subtitle()
     {
-        console.log("[Update_Subtitle_Highlighting_Words]")
+        const subtitle_element = document.getElementsByClassName('lln-subs')[0];
 
-        // Get saved words
-        chrome.storage.local.get(['user_saved_words', 'ankiHighLightColour', 'ankiHighLightSavedWords'], function ({ user_saved_words, ankiHighLightColour, ankiHighLightSavedWords })
+        subtitle_element.querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
         {
-            console.log("[Update_Subtitle_Highlighting_Words] Getting saved words...")
-            // console.log(user_saved_words)
-
-            // dont highlight if there are no words, or the option to no highlight is set
-            if (!user_saved_words || ankiHighLightSavedWords === false)
-                return;
-
-            const subtitles = document.getElementsByClassName('lln-subs');
-            if (subtitles.length > 0)
+            const word = element.innerText.toLowerCase();
+            if (anki_saved_words.includes(word))
             {
-                subtitles[0].querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
-                {
-                    if (user_saved_words.includes(element.innerText.toLowerCase()))
-                    {
-                        //element.style.color = 'LightCoral'; // #F08080
-                        element.style.color = ankiHighLightColour;
-                    }
-                    else // This is needed for when we remove our modidied colours, it will return back to default
-                    {
-                        element.style.color = '';
-                    }
-                });
+                element.style.color = anki_highlight_colour || 'LightCoral'; // #F08080
             }
         });
     }
 
+    function Highlight_Words_Store()
+    {
+        // NOTE : Does this need to be done everytime?
+        //const unique_words_only = anki_saved_words.reduce((accumulator, current) =>
+        //{
+        //    if (!accumulator.includes(current))
+        //    {
+        //        accumulator.push(current);
+        //    }
+        //    return accumulator;
+        //}, []);
+        //anki_saved_words = unique_words_only;
+
+        //chrome.storage.local.set({ user_saved_words: unique_words_only });
+
+        chrome.storage.local.set({ user_saved_words: anki_saved_words });
+    }
+
+
+    function Highlight_Words_Remove_Word()
+    {
+        // 1 - Get the current word
+        // 2 - Remove from list
+        // 3 - Update Store 
+        // 4 - Update subtitle
+
+        const dict_context = document.getElementsByClassName('lln-dict-contextual')[0];
+        if (!dict_context)
+        {
+            console.warm("Cannot find 'lln-dict-contextual'");
+            return;
+        }
+
+        const selected_word = dict_context.children[1].innerText;
+
+        if (selected_word)
+        {
+            const index = anki_saved_words.indexOf(selected_word);
+            if (index !== -1)
+            {
+                anki_saved_words.splice(index, 1);
+
+                console.log(`Removed ${selected_word} from highlight list`);
+
+                Highlight_Words_Store();
+            }
+        }
+    }
+
+    //
+    // SEND TO ANKI
+    //
     function LLW_Send_Data_To_Anki(anki_settings, fields, image_data, audio_data)
     {
         console.log("Destination : ", anki_settings);
@@ -887,6 +940,9 @@
             });
     }
 
+    //
+    // DELICIOUS TOAST
+    //
     function show_success_message(message)
     {
         Toastify({

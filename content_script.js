@@ -936,7 +936,31 @@
                     })
             }).catch((error) =>
             {
-                show_error_message("Permission Error, extension doesnt have permission to connect to Anki, check AnkiConnect config 'webCorsOriginList', " + error);
+                show_error_message("Permission Error, check Anki is open and extension has permission to connect to Anki (AnkiConnect config 'webCorsOriginList') :" + error);
+
+                // Since Anki could be closed for this error to happen, it would be possible for the audio or screenshot data not to be sent to Anki,
+                // resulting in the next time a card is made from the same subtitle, an audio or screenshot field is filled with a filename and no data.
+                // We need to remove the filenames from our "cached" list
+
+                if (image_data && typeof image_data.filename === "string")
+                {
+                    const index = SCREENSHOT_FILENAMES.indexOf(image_data.filename);
+                    if (index !== -1)
+                    {
+                        SCREENSHOT_FILENAMES.splice(index, 1);
+                    }
+                }
+
+                if (audio_data && typeof audio_data.filename === "string")
+                {
+                    const index = AUDIO_FILENAMES.indexOf(audio_data.filename);
+                    if (index !== -1)
+                    {
+                        AUDIO_FILENAMES.splice(index, 1);
+                    }
+                }
+
+                // NOTE : Should we remove the word from the highlight list?
             });
     }
 

@@ -2,86 +2,106 @@
 {
     console.log("----- [content_script.js] LOADED");
 
-    // Toggle the console output on and off
     const CONSOLE_LOGGING = true;
-    if (!CONSOLE_LOGGING)
-    {
-        console.log = function () { };
-    }
+    if (!CONSOLE_LOGGING) console.log = function () { };
 
     //
     // GLOBALS
     //
-    // NOTE : This wont be presist between page loads
-    let SCREENSHOT_FILENAMES = [];
-    let AUDIO_FILENAMES = [];
-    let lln_search_class_name = "";
 
-    if (window.location.href.includes("netflix"))
+    // NOTE : This wont be presist between page loads
+    let llw_screenshot_filenames = [];
+    let llw_audio_filenames = [];
+
+    let llw_saved_words = [];
+    let llw_highlight_colour = "";
+    let llw_highlight_words = false;
+
+    const llw_anki_btn = document.createElement("div");
+    llw_anki_btn.className = "llw_anki_btn lln-external-dict-btn tippy";
+    llw_anki_btn.innerHTML = "Anki";
+    llw_anki_btn.setAttribute("data-tippy-content", "Send to Anki");
+
+    const llw_remove_highlight_word_btn = document.createElement("div");
+    llw_remove_highlight_word_btn.className = "llw_remove_highlight_word_btn-btn lln-external-dict-btn tippy";
+    llw_remove_highlight_word_btn.innerHTML = "RC";
+    llw_remove_highlight_word_btn.setAttribute("data-tippy-content", "Remove word from being highlighted");
+    llw_remove_highlight_word_btn.onclick = Highlight_Words_Remove_Word;
+
+    //
+    // STARTUP
+    //
+
+    if (document.readyState === "loading")
     {
-        lln_search_class_name = "lln-netflix";
-    }
-    else if (window.location.href.includes("youtube"))
-    {
-        lln_search_class_name = "lln-youtube";
+        document.addEventListener("DOMContentLoaded", () => Init());
     }
     else
     {
-        alert("Wrong website!");
-        return;
+        Init();
     }
 
-    // We loop for the body to had the correct "lln" class name set
-    let check_dict_wrap_exists = setInterval(function ()
+    function Init()
     {
-        const lln_element = document.getElementsByClassName(lln_search_class_name)[0];
-        if (lln_element)
+        let llw_search_class_name = "";
+
+        if (window.location.href.includes("netflix"))
         {
-            clearInterval(check_dict_wrap_exists);
-            console.log(`'${lln_search_class_name}' class has been found!`)
-
-            Add_Functions_To_Side_Bar_Subs();
-            Highlight_Words_Setup();
-
-            let dict_wrap_observer = new MutationObserver(function (mutations)
-            {
-                for (let mutation of mutations)
-                {
-                    for (let new_elem of mutation.addedNodes)
-                    {
-                        if (new_elem instanceof HTMLElement)
-                        {
-                            if (new_elem.classList.contains('lln-full-dict'))
-                            {
-                                console.log("Dictionary open, adding Anki button");
-                                Add_Anki_Button_To_Popup_Dictionary();
-                                break;
-                            }
-                        }
-
-                    }
-                }
-            });
-            dict_wrap_observer.observe(lln_element, {
-                attributes: true,
-                childList: true,
-                subtree: true
-            });
+            llw_search_class_name = "lln-netflix";
         }
-    }, 100);
+        else if (window.location.href.includes("youtube"))
+        {
+            llw_search_class_name = "lln-youtube";
+        }
+        else
+        {
+            alert("Wrong website!");
+            return;
+        }
 
-    // Create Anki button
-    const anki_div = document.createElement("div");
-    anki_div.className = "anki-btn lln-external-dict-btn tippy";
-    anki_div.innerHTML = "Anki";
-    anki_div.setAttribute("data-tippy-content", "Send to Anki");
+        // We loop for the body to had the correct "lln" class name set
+        let check_dict_wrap_exists = setInterval(function ()
+        {
+            const lln_element = document.getElementsByClassName(llw_search_class_name)[0];
+            if (lln_element)
+            {
+                clearInterval(check_dict_wrap_exists);
+                console.log(`'${llw_search_class_name}' class has been found!`)
 
-    // Create Remove Highlighted word button
-    const remove_highlight = document.createElement("div");
-    remove_highlight.className = "remove_highlight-btn lln-external-dict-btn tippy";
-    remove_highlight.innerHTML = "RC";
-    remove_highlight.setAttribute("data-tippy-content", "Remove word from being highlighted");
-    remove_highlight.onclick = Highlight_Words_Remove_Word;
+                Add_Functions_To_Side_Bar_Subs();
+                Highlight_Words_Setup();
+
+                let dict_wrap_observer = new MutationObserver(function (mutations)
+                {
+                    for (let mutation of mutations)
+                    {
+                        for (let new_elem of mutation.addedNodes)
+                        {
+                            if (new_elem instanceof HTMLElement)
+                            {
+                                if (new_elem.classList.contains('lln-full-dict'))
+                                {
+                                    console.log("Dictionary open, adding Anki button");
+                                    Add_Anki_Button_To_Popup_Dictionary();
+                                    break;
+                                }
+                            }
+
+                        }
+                    }
+                });
+                dict_wrap_observer.observe(lln_element, {
+                    attributes: true,
+                    childList: true,
+                    subtree: true
+                });
+            }
+        }, 100);
+    }
+
+    //
+    // DICTIONARY SETUP
+    //
 
     function Add_Anki_Button_To_Popup_Dictionary()
     {
@@ -95,12 +115,12 @@
         const popup_dict_element = document.getElementsByClassName('lln-full-dict')[0];
         if (popup_dict_element)
         {
-            anki_div.onclick = popup_dict_element.classList.contains("right") ?
+            llw_anki_btn.onclick = popup_dict_element.classList.contains("right") ?
                 Handle_Jump_To_Subtitle_With_Sidebar :
                 Subtitle_Dictionary_Get_Data;
         }
 
-        btn_location.append(anki_div, remove_highlight);
+        btn_location.append(llw_anki_btn, llw_remove_highlight_word_btn);
     }
 
     function Handle_Jump_To_Subtitle_With_Sidebar()
@@ -487,9 +507,9 @@
 
                     const image_filename = `Youtube2Anki_${video_id}_${video_current_time}.png`;
 
-                    if (!SCREENSHOT_FILENAMES.includes(image_filename))
+                    if (!llw_screenshot_filenames.includes(image_filename))
                     {
-                        SCREENSHOT_FILENAMES.push(image_filename);
+                        llw_screenshot_filenames.push(image_filename);
 
                         console.log(`${image_filename} added to screenshot list`);
 
@@ -518,9 +538,9 @@
                     if (ankiHighLightSavedWords)
                     {
                         console.log("Fill ankiHighLightSavedWords new word");
-                        if (!anki_saved_words.includes(selected_word))
+                        if (!llw_saved_words.includes(selected_word))
                         {
-                            anki_saved_words.push(selected_word);
+                            llw_saved_words.push(selected_word);
 
                             Highlight_Words_Store();
                         }
@@ -531,7 +551,6 @@
                         console.log("Fill ankiWordSelected");
 
                         card_data[ankiWordSelected] = selected_word;
-                        //Store_Word_In_Chrome(selected_word); // Used for highliting words used in cards
                     }
 
                     // Get basic translation (this is top of the popup dic)
@@ -650,11 +669,11 @@
                     }
                     const audio_filename = `Youtube2Anki_${video_id}_${sub_index}.webm`;
 
-                    if (!AUDIO_FILENAMES.includes(audio_filename))
+                    if (!llw_audio_filenames.includes(audio_filename))
                     {
-                        AUDIO_FILENAMES.push(audio_filename);
+                        llw_audio_filenames.push(audio_filename);
 
-                        console.log(`${audio_filename} added to screenshot list`);
+                        console.log(`${audio_filename} added to audio list`);
 
                         const audio_raw_data = await Get_Audio();
 
@@ -685,9 +704,6 @@
     //
     // HIGHLIGHT WORDS
     //
-    let anki_saved_words = [];
-    let anki_highlight_colour = "";
-    let anki_highlight_words = false;
 
     // Here we are checking if the user toggles the highlighting words setting, this will save the user
     // having to refresh the page to get or remove highlighting, same for the colour value
@@ -701,13 +717,13 @@
                 if (key === 'ankiHighLightSavedWords')
                 {
                     console.log(`${key} has changed from '${oldValue}' to '${newValue}'`);
-                    anki_highlight_words = newValue;
+                    llw_highlight_words = newValue;
                 }
 
                 if (key === 'ankiHighLightColour')
                 {
                     console.log(`${key} has changed from '${oldValue}' to '${newValue}'`);
-                    anki_highlight_colour = newValue;
+                    llw_highlight_colour = newValue;
                 }
             }
         }
@@ -725,11 +741,11 @@
                     return;
                 }
 
-                anki_saved_words = user_saved_words;
-                anki_highlight_colour = ankiHighLightColour || 'LightCoral';
-                anki_highlight_words = true;
+                llw_saved_words = user_saved_words;
+                llw_highlight_colour = ankiHighLightColour || 'LightCoral';
+                llw_highlight_words = true;
 
-                console.log("Highlight word settings:", { anki_saved_words, anki_highlight_colour, anki_highlight_words });
+                console.log("Highlight word settings:", { llw_saved_words, llw_highlight_colour, llw_highlight_words });
 
                 console.log("Waiting for subtitle content element...");
                 const wait_for_subtitles_to_show = setInterval(function ()
@@ -742,7 +758,7 @@
 
                         const observer = new MutationObserver((mutationList) =>
                         {
-                            if (anki_highlight_words)
+                            if (llw_highlight_words)
                             {
                                 for (const mutation of mutationList)
                                 {
@@ -773,9 +789,9 @@
         subtitle_element.querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
         {
             const word = element.innerText.toLowerCase();
-            if (anki_saved_words.includes(word))
+            if (llw_saved_words.includes(word))
             {
-                element.style.color = anki_highlight_colour || 'LightCoral'; // #F08080
+                element.style.color = llw_highlight_colour || 'LightCoral'; // #F08080
             }
         });
     }
@@ -783,7 +799,7 @@
     function Highlight_Words_Store()
     {
         // NOTE : Does this need to be done everytime?
-        //const unique_words_only = anki_saved_words.reduce((accumulator, current) =>
+        //const unique_words_only = llw_saved_words.reduce((accumulator, current) =>
         //{
         //    if (!accumulator.includes(current))
         //    {
@@ -791,11 +807,11 @@
         //    }
         //    return accumulator;
         //}, []);
-        //anki_saved_words = unique_words_only;
+        //llw_saved_words = unique_words_only;
 
         //chrome.storage.local.set({ user_saved_words: unique_words_only });
 
-        chrome.storage.local.set({ user_saved_words: anki_saved_words });
+        chrome.storage.local.set({ user_saved_words: llw_saved_words });
     }
 
 
@@ -817,10 +833,10 @@
 
         if (selected_word)
         {
-            const index = anki_saved_words.indexOf(selected_word);
+            const index = llw_saved_words.indexOf(selected_word);
             if (index !== -1)
             {
-                anki_saved_words.splice(index, 1);
+                llw_saved_words.splice(index, 1);
 
                 console.log(`Removed ${selected_word} from highlight list`);
 
@@ -832,6 +848,7 @@
     //
     // SEND TO ANKI
     //
+
     function LLW_Send_Data_To_Anki(anki_settings, fields, image_data, audio_data)
     {
         console.log("Destination : ", anki_settings);
@@ -944,29 +961,32 @@
 
                 if (image_data && typeof image_data.filename === "string")
                 {
-                    const index = SCREENSHOT_FILENAMES.indexOf(image_data.filename);
+                    const index = llw_screenshot_filenames.indexOf(image_data.filename);
                     if (index !== -1)
                     {
-                        SCREENSHOT_FILENAMES.splice(index, 1);
+                        llw_screenshot_filenames.splice(index, 1);
                     }
                 }
 
                 if (audio_data && typeof audio_data.filename === "string")
                 {
-                    const index = AUDIO_FILENAMES.indexOf(audio_data.filename);
+                    const index = llw_audio_filenames.indexOf(audio_data.filename);
                     if (index !== -1)
                     {
-                        AUDIO_FILENAMES.splice(index, 1);
+                        llw_audio_filenames.splice(index, 1);
                     }
                 }
 
                 // NOTE : Should we remove the word from the highlight list?
+                //if (fields && fields.ankiWordSelected)
+                //    Highlight_Words_Remove_Word();
             });
     }
 
     //
     // DELICIOUS TOAST
     //
+
     function show_success_message(message)
     {
         Toastify({

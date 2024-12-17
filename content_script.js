@@ -648,6 +648,9 @@
                         }
 
                         console.log("Example sentences :", example_sentences_list);
+
+                        card_data[ankiExampleSentencesSelected] = ''; // initialize or we get a 'undefined' as first value
+
                         example_sentences_list.forEach(element =>
                         {
                             card_data[ankiExampleSentencesSelected] += element.innerText + "<br>";

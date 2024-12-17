@@ -10,16 +10,20 @@ Language Reactor can be found here:
 
 ## Setup
 
-1) Must install [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin.
-2) Must leave the Anki desktop application open in order to connect to it.
-3) Install unpacked extension.
-4) Setup the URL (default is `http://localhost:8765`), deck and model
+1) Must install the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin.
+2) Must leave the Anki desktop application open in order for Ankiconnect to connect to it.
+3) Install the unpacked `Language-Learning-With-Anki` extension.
+4) Setup the URL (default is `http://localhost:8765`), deck and model values, making sure the top field of your note type has a [valid field](#empty-note-error) value.
 
 ## Usage
 
 Click a word to bring up the definition popup.
 Clicking the Anki button will send the current word and definition straight to Anki.
-Also, the "RC" option, will remove the colour from the selected word
+The "RC" option, will remove the colour from the selected word
+
+If the highlight word option is turned on then all words sent to Anki will be saved and highlighted, with this setting turned off, words will not be saved so will not be highlighted if turned back on. 
+
+When using the audio field, the extension will replay the subtitle again to collect the audio. Let the video play and wait for the success popup before doing anything else, interupting the playblack may cause a half finished audio track. Subsequent cards made with the same subtitle, will not need to recreate the audio.
 
 ![bubble-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/screenshots/popup.PNG)
 
@@ -35,7 +39,8 @@ Exported data fields:
  6) `Example Sentences` - examaples bellow the definitons in the popup, either from current video or Tatoeba
  7) `Example Source`  - Tatoeba or Current video
  8) `Other Translation` - the extra translations of the word, formatted in HTML
- 9) `(URL)` - URL of current video with the current timestamp
+ 9) `Audio` - audio for the current subtitle (limited to 16s)
+ 9) `URL` - URL of current video with the current timestamp
  10) `Highlight` - toggle wether to highlight words exported to Anki in the choosen colour
 
 Settings allow you to choose which fields are filled with what data. A blank options means that data is skipped
@@ -59,6 +64,6 @@ Example of "webCorsOriginList"
     ]
 ```
 
-- `cannot create note because it is empty`
+- `cannot create note because it is empty`<a id="empty-note-error"></a>
 
 Make sure the field at position 1 in your Anki note type (Tools > Manage Note Types) is set to a value in the extentions settings page, if not, then you will get this error. See [also](https://github.com/ClearlyKyle/Language-Learning-With-Anki/issues/7#issuecomment-2510020695)

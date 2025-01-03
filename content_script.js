@@ -386,11 +386,9 @@
             }
         }
 
-        // Start capturing the audio track
         const stream = video_element.captureStream();
         const audioStream = new MediaStream(stream.getAudioTracks());
 
-        // Create a MediaRecorder to record the audio
         const recorder = new MediaRecorder(audioStream);
         const chunks = [];
 

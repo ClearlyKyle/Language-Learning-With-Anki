@@ -4,10 +4,7 @@ console.log("----- [background.js] LOADED");
 // DEBUG MODE
 //
 const CONSOLE_LOGGING = true;
-if (!CONSOLE_LOGGING)
-{
-    console.log = function () { };
-}
+if (!CONSOLE_LOGGING) console.log = function () { };
 
 //
 // GLOBALS
@@ -67,7 +64,7 @@ function init()
     for (let i = 0; i < anki_id_names.length; i++)
     {
         const element_name = anki_id_names[i];
-        anki_field_elements[element_name] = document.getElementById(element_name);
+        anki_field_elements[element_name] = document.getElementById(element_name); // Remove this element storage?
     }
 
     const submit_element = document.getElementById('saveAnkiBtn');
@@ -78,6 +75,10 @@ function init()
             const element_name = anki_field_names[i];
             anki_storage_values[element_name] = anki_field_elements[element_name].value;
         }
+
+        anki_storage_values["ankiNoteNameSelected"] = anki_field_elements.ankiNoteNameSelected.value;
+        anki_storage_values["ankiDeckNameSelected"] = anki_field_elements.ankiDeckNameSelected.value;
+        anki_storage_values["ankiConnectUrl"] = anki_field_elements.ankiConnectUrl.value;
 
         anki_storage_values["ankiExampleSentenceSource"] = anki_field_elements.ankiExampleSentenceSource.value;
         anki_storage_values["ankiHighLightSavedWords"] = anki_field_elements.ankiHighLightSavedWords.checked;
@@ -170,7 +171,7 @@ function Add_Options_To_Field_Dropdown_Promise(element_id, data, saved_value)
 {
     return new Promise((resolve, reject) =>
     {
-        console.log("Calling this promuse", data);
+        console.log("Data for dropdown", data);
         const dropdown = anki_field_elements[element_id];
 
         dropdown.length = 0;

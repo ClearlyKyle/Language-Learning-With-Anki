@@ -732,9 +732,8 @@
 
     function Highlight_Words_Setup()
     {
-        // Get the current list of stored words
-        chrome.storage.local.get(['user_saved_words', 'ankiHighLightColour', 'ankiHighLightSavedWords'],
-            ({ user_saved_words, ankiHighLightColour, ankiHighLightSavedWords }) =>
+        chrome.storage.local.get(['ankiHighlightWordList', 'ankiHighLightColour', 'ankiHighLightSavedWords'],
+            ({ ankiHighlightWordList, ankiHighLightColour, ankiHighLightSavedWords }) =>
             {
                 if (!ankiHighLightSavedWords) 
                 {
@@ -742,9 +741,14 @@
                     return;
                 }
 
-                llw_saved_words = user_saved_words;
+                llw_saved_words = ankiHighlightWordList || [];
                 llw_highlight_colour = ankiHighLightColour || 'LightCoral';
                 llw_highlight_words = true;
+
+                if (!Array.isArray(llw_saved_words))
+                {
+                    console.error("llw_saved_words is not an array.");
+                }
 
                 console.log("Highlight word settings:", { llw_saved_words, llw_highlight_colour, llw_highlight_words });
 
@@ -809,10 +813,10 @@
         //    return accumulator;
         //}, []);
         //llw_saved_words = unique_words_only;
+        //chrome.storage.local.set({ ankiHighlightWordList: unique_words_only });
 
-        //chrome.storage.local.set({ user_saved_words: unique_words_only });
-
-        chrome.storage.local.set({ user_saved_words: llw_saved_words });
+        // NOTE : On extension removal, this stored list will be lost!
+        chrome.storage.local.set({ ankiHighlightWordList: llw_saved_words });
     }
 
 

@@ -244,7 +244,7 @@
             const video_element = document.getElementsByClassName("video-stream")[0];
             if (!video_element)
             {
-                console.warn("Where has the video element went?");
+                console.warn("Get_Video_URL YT: Missing video element!");
             }
             else
             {
@@ -265,10 +265,10 @@
                 video_id = match[1];
             }
 
-            const video_element = document.querySelector(".video");
+            const video_element = document.querySelector("video");
             if (!video_element)
             {
-                console.warn("Where has the video element went?");
+                console.warn("Get_Video_URL NF: Missing video element!");
             }
             else
             {
@@ -285,6 +285,7 @@
 
         return [time_stamped_url, video_id, current_time];
     }
+
 
     function Get_Screenshot()
     {
@@ -358,20 +359,22 @@
         }
         else if (window.location.href.includes("netflix.com/watch"))
         {
-            video_element = document.querySelector(".video");
+            // TODO : Netflix audio collecting
+            //video_element = document.querySelector("video");
+            return null;
         }
 
         if (!video_element)
         {
             console.warn("No video element found to get audio");
-            return;
+            return null;
         }
 
         const audio_play_button = document.getElementsByClassName('lln-subs-replay-btn')[0];
         if (!audio_play_button)
         {
             console.warn("No subtitle audio play button!");
-            return;
+            return null;
         }
 
         let auto_stop_initial_state = false; // Should we even bother saving this?
@@ -491,6 +494,7 @@
                 let audio_data = {};
 
                 [video_url, video_id, video_current_time] = Get_Video_URL();
+                if (video_current_time === 0) console.warn("We did not get a current time");
 
                 if (ankiFieldURL)
                 {
@@ -503,26 +507,31 @@
                 {
                     console.log("Fill ankiFieldScreenshotSelected");
 
-                    const image_filename = `Youtube2Anki_${video_id}_${video_current_time}.png`;
+                    const image_filename = `LLW_to_Anki_${video_id}_${video_current_time}.png`;
 
                     if (!llw_screenshot_filenames.includes(image_filename))
                     {
-                        llw_screenshot_filenames.push(image_filename);
-
-                        console.log(`${image_filename} added to screenshot list`);
-
                         const captured_image_data = await Get_Screenshot();
+                        if (captured_image_data)
+                        {
+                            llw_screenshot_filenames.push(image_filename);
+                            console.log(`${image_filename} added to screenshot list`);
 
-                        image_data['data'] = captured_image_data;
-                        image_data['filename'] = image_filename;
+                            image_data['data'] = captured_image_data;
+                            image_data['filename'] = image_filename;
+
+                            card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
+                        }
+                        else
+                        {
+                            console.log("We did not get anything back for the Screenshot data");
+                        }
                     }
                     else
                     {
-                        console.log(`${image_filename} already exists.`);
+                        console.log(`${image_filename} already exists`);
+                        card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
                     }
-
-
-                    card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
                 }
 
                 // The popup dictionary window
@@ -668,28 +677,37 @@
                     {
                         sub_index = element.dataset.index;
                     }
-                    const audio_filename = `Youtube2Anki_${video_id}_${sub_index}.webm`;
+                    const audio_filename = `LLW_to_Anki_${video_id}_${sub_index}.webm`;
 
                     if (!llw_audio_filenames.includes(audio_filename))
                     {
-                        llw_audio_filenames.push(audio_filename);
-
-                        console.log(`${audio_filename} added to audio list`);
-
                         const audio_raw_data = await Get_Audio();
+                        if (audio_raw_data)
+                        {
+                            llw_audio_filenames.push(audio_filename);
+                            console.log(`${audio_filename} added to audio list`);
 
-                        audio_data['data'] = audio_raw_data;
-                        audio_data['filename'] = audio_filename;
+                            audio_data['data'] = audio_raw_data;
+                            audio_data['filename'] = audio_filename;
+
+                            card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
+                        }
+                        else
+                        {
+                            console.log("We did not get anything back for the Audio data")
+                        }
                     }
                     else
                     {
                         console.log(`${audio_filename} already exists.`);
+                        card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
                     }
-
-                    card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
                 }
 
-                console.log("Card data to send to Anki : ", card_data);
+                console.log("Card data to send to Anki :", card_data);
+
+                console.log("Audio Data :", audio_data);
+                console.log("Image Data :", image_data);
 
                 const anki_settings = {
                     "deck": ankiDeckNameSelected,
@@ -697,6 +715,8 @@
                     "url": ankiConnectUrl || 'http://localhost:8765',
                 }
 
+                // TODO : if anki is not open, then all the data for screenshots, audio, card data is still
+                // collected, we should check way earlier if it is open or not
                 LLW_Send_Data_To_Anki(anki_settings, card_data, image_data, audio_data);
             }
         );

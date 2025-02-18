@@ -453,6 +453,11 @@
 
     async function Subtitle_Dictionary_Get_Data() // This is where we pull all the data we want from the popup dictionary
     {
+        const permission_data = '{"action":"requestPermission","version":6}';
+
+        // since we check for permission every call, it can also be used as a way to check if anki is open
+        // then we will only collect the data for the card when anki is open
+
         chrome.storage.local.get(
             [
                 "ankiDeckNameSelected",
@@ -487,240 +492,277 @@
                 ankiHighLightSavedWords,
             }) =>
             {
-                console.log("[Subtitle_Dictionary_Get_Data] Getting Data for Anki...");
-
-                let card_data = {};
-                let image_data = {};
-                let audio_data = {};
-
-                [video_url, video_id, video_current_time] = Get_Video_URL();
-                if (video_current_time === 0) console.warn("We did not get a current time");
-
-                if (ankiFieldURL)
-                {
-                    console.log("Fill ankiFieldURL");
-
-                    card_data[ankiFieldURL] = video_url;
-                }
-
-                if (ankiFieldScreenshotSelected) 
-                {
-                    console.log("Fill ankiFieldScreenshotSelected");
-
-                    const image_filename = `LLW_to_Anki_${video_id}_${video_current_time}.png`;
-
-                    if (!llw_screenshot_filenames.includes(image_filename))
+                fetch(ankiConnectUrl, { // get this URL earlier and only do one permission check?
+                    method: "POST",
+                    body: permission_data,
+                })
+                    .then(async () => 
                     {
-                        const captured_image_data = await Get_Screenshot();
-                        if (captured_image_data)
+                        console.log("[Subtitle_Dictionary_Get_Data] Getting Data for Anki...");
+
+                        let card_data = {};
+                        let image_data = {};
+                        let audio_data = {};
+
+                        [video_url, video_id, video_current_time] = Get_Video_URL();
+                        if (video_current_time === 0) console.warn("We did not get a current time");
+
+                        if (ankiFieldURL)
                         {
-                            llw_screenshot_filenames.push(image_filename);
-                            console.log(`${image_filename} added to screenshot list`);
+                            console.log("Fill ankiFieldURL");
 
-                            image_data['data'] = captured_image_data;
-                            image_data['filename'] = image_filename;
-
-                            card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
+                            card_data[ankiFieldURL] = video_url;
                         }
-                        else
+
+                        if (ankiFieldScreenshotSelected) 
                         {
-                            console.log("We did not get anything back for the Screenshot data");
-                        }
-                    }
-                    else
-                    {
-                        console.log(`${image_filename} already exists`);
-                        card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
-                    }
-                }
+                            console.log("Fill ankiFieldScreenshotSelected");
 
-                // The popup dictionary window
-                let selected_word = "";
-                const dict_context = document.getElementsByClassName('lln-dict-contextual');
-                if (dict_context.length)
-                {
-                    // Get word selected
-                    selected_word = dict_context[0].children[1].innerText;
+                            const image_filename = `LLW_to_Anki_${video_id}_${video_current_time}.png`;
 
-                    if (ankiHighLightSavedWords)
-                    {
-                        console.log("Fill ankiHighLightSavedWords new word");
-                        if (!llw_saved_words.includes(selected_word))
-                        {
-                            llw_saved_words.push(selected_word);
-
-                            Highlight_Words_Store();
-                        }
-                    }
-
-                    if (ankiWordSelected)
-                    {
-                        console.log("Fill ankiWordSelected");
-
-                        card_data[ankiWordSelected] = selected_word;
-                    }
-
-                    // Get basic translation (this is top of the popup dic)
-                    if (ankiBasicTranslationSelected)
-                    {
-                        console.log("Fill ankiBasicTranslationSelected");
-
-                        const translation_text = dict_context[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
-
-                        const translation_text_without_most_common_number = translation_text.split("\n").slice(1); // removing the 3k, 2k, 4k, from the translation
-
-                        card_data[ankiBasicTranslationSelected] = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
-                    }
-                }
-
-                // Get full definition (this is the difinitions provided bellow the AI part)
-                if (ankiOtherTranslationSelected)
-                {
-                    const full_definition_element = document.getElementsByClassName('lln-dict-section-full');
-                    if (full_definition_element.length)
-                    {
-                        console.log("Fill ankiOtherTranslationSelected");
-
-                        card_data[ankiOtherTranslationSelected] = full_definition_element[0].innerHTML;
-                    }
-                }
-
-                if (ankiSubtitleSelected)
-                {
-                    console.log("Fill ankiSubtitleSelected");
-
-                    const subtitle_element = document.getElementsByClassName('lln-subs');
-                    if (subtitle_element.length)
-                    {
-                        const subtitle = subtitle_element[0].innerText;
-
-                        card_data[ankiSubtitleSelected] = subtitle;
-
-                        if (selected_word) // If we are storing the word too, we will highlight in the subtitle
-                        {
-                            // Make selected word bold in the subtitles, might not work for all languages :(
-                            card_data[ankiSubtitleSelected] = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${selected_word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + selected_word + "</b>");
-                        }
-                    }
-                }
-
-                // Get the translation text (will fail if its not loaded)
-                if (ankiSubtitleTranslation)
-                {
-                    console.log("Fill ankiSubtitleTranslation");
-
-                    const subtitle_translation_element = document.getElementsByClassName('lln-whole-title-translation');
-                    if (subtitle_translation_element.length)
-                    {
-                        card_data[ankiSubtitleTranslation] = subtitle_translation_element[0].innerText;
-                    }
-                }
-
-                // Getting Example sentences 
-                // There are two sets of example sentences, so we can choose between which set we want
-                if (ankiExampleSentencesSelected)
-                {
-                    console.log("Fill ankiExampleSentencesSelected, from", ankiExampleSentenceSource);
-
-                    const example_sentences_element = document.getElementsByClassName('lln-word-examples');
-                    if (example_sentences_element.length)
-                    {
-                        let example_sentences_list = [];
-                        switch (ankiExampleSentenceSource)
-                        {
-                            case "Both":
-                                if (example_sentences_element[0]) 
+                            if (!llw_screenshot_filenames.includes(image_filename))
+                            {
+                                const captured_image_data = await Get_Screenshot();
+                                if (captured_image_data)
                                 {
-                                    example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
+                                    llw_screenshot_filenames.push(image_filename);
+                                    console.log(`${image_filename} added to screenshot list`);
+
+                                    image_data['data'] = captured_image_data;
+                                    image_data['filename'] = image_filename;
+
+                                    card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
                                 }
-                                if (example_sentences_element[1]) 
+                                else
                                 {
-                                    const tmp = Array.from(example_sentences_element[1].children).slice(1);
-                                    example_sentences_list = example_sentences_list.concat(tmp);
+                                    console.log("We did not get anything back for the Screenshot data");
+                                }
+                            }
+                            else
+                            {
+                                console.log(`${image_filename} already exists`);
+                                card_data[ankiFieldScreenshotSelected] = '<img src="' + image_filename + '" />';
+                            }
+                        }
+
+                        // The popup dictionary window
+                        let selected_word = "";
+                        const dict_context = document.getElementsByClassName('lln-dict-contextual');
+                        if (dict_context.length)
+                        {
+                            // Get word selected
+                            selected_word = dict_context[0].children[1].innerText;
+
+                            if (ankiHighLightSavedWords)
+                            {
+                                console.log("Fill ankiHighLightSavedWords new word");
+                                if (!llw_saved_words.includes(selected_word))
+                                {
+                                    llw_saved_words.push(selected_word);
+
+                                    Highlight_Words_Store();
+                                }
+                            }
+
+                            if (ankiWordSelected)
+                            {
+                                console.log("Fill ankiWordSelected");
+
+                                card_data[ankiWordSelected] = selected_word;
+                            }
+
+                            // Get basic translation (this is top of the popup dic)
+                            if (ankiBasicTranslationSelected)
+                            {
+                                console.log("Fill ankiBasicTranslationSelected");
+
+                                const translation_text = dict_context[0].innerText; // ex: '3k\nвпечатлениях\nimpressions'
+
+                                const translation_text_without_most_common_number = translation_text.split("\n").slice(1); // removing the 3k, 2k, 4k, from the translation
+
+                                card_data[ankiBasicTranslationSelected] = translation_text_without_most_common_number.join('<br>'); // replace line brea '\n' with <br> tag
+                            }
+                        }
+
+                        // Get full definition (this is the difinitions provided bellow the AI part)
+                        if (ankiOtherTranslationSelected)
+                        {
+                            const full_definition_element = document.getElementsByClassName('lln-dict-section-full');
+                            if (full_definition_element.length)
+                            {
+                                console.log("Fill ankiOtherTranslationSelected");
+
+                                card_data[ankiOtherTranslationSelected] = full_definition_element[0].innerHTML;
+                            }
+                        }
+
+                        if (ankiSubtitleSelected)
+                        {
+                            console.log("Fill ankiSubtitleSelected");
+
+                            const subtitle_element = document.getElementsByClassName('lln-subs');
+                            if (subtitle_element.length)
+                            {
+                                const subtitle = subtitle_element[0].innerText;
+
+                                card_data[ankiSubtitleSelected] = subtitle;
+
+                                if (selected_word) // If we are storing the word too, we will highlight in the subtitle
+                                {
+                                    // Make selected word bold in the subtitles, might not work for all languages :(
+                                    card_data[ankiSubtitleSelected] = subtitle.replace(new RegExp(`(?<![\u0400-\u04ff])${selected_word}(?![\u0400-\u04ff])`, 'gi'), "<b>" + selected_word + "</b>");
+                                }
+                            }
+                        }
+
+                        // Get the translation text (will fail if its not loaded)
+                        if (ankiSubtitleTranslation)
+                        {
+                            console.log("Fill ankiSubtitleTranslation");
+
+                            const subtitle_translation_element = document.getElementsByClassName('lln-whole-title-translation');
+                            if (subtitle_translation_element.length)
+                            {
+                                card_data[ankiSubtitleTranslation] = subtitle_translation_element[0].innerText;
+                            }
+                        }
+
+                        // Getting Example sentences 
+                        // There are two sets of example sentences, so we can choose between which set we want
+                        if (ankiExampleSentencesSelected)
+                        {
+                            console.log("Fill ankiExampleSentencesSelected, from", ankiExampleSentenceSource);
+
+                            const example_sentences_element = document.getElementsByClassName('lln-word-examples');
+                            if (example_sentences_element.length)
+                            {
+                                let example_sentences_list = [];
+                                switch (ankiExampleSentenceSource)
+                                {
+                                    case "Both":
+                                        if (example_sentences_element[0]) 
+                                        {
+                                            example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
+                                        }
+                                        if (example_sentences_element[1]) 
+                                        {
+                                            const tmp = Array.from(example_sentences_element[1].children).slice(1);
+                                            example_sentences_list = example_sentences_list.concat(tmp);
+                                        }
+
+                                        break;
+                                    case "Current":
+                                        if (example_sentences_element[0])
+                                            example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
+                                        break;
+                                    case "Tatoeba":
+                                        if (example_sentences_element[1])
+                                            example_sentences_list = Array.from(example_sentences_element[1].children).slice(1);
+                                        break;
+                                    case "None": // fallthrough
+                                    default:
+                                        example_sentences_list = [];
+                                        break;
                                 }
 
-                                break;
-                            case "Current":
-                                if (example_sentences_element[0])
-                                    example_sentences_list = Array.from(example_sentences_element[0].children).slice(1);
-                                break;
-                            case "Tatoeba":
-                                if (example_sentences_element[1])
-                                    example_sentences_list = Array.from(example_sentences_element[1].children).slice(1);
-                                break;
-                            case "None": // fallthrough
-                            default:
-                                example_sentences_list = [];
-                                break;
+                                console.log("Example sentences :", example_sentences_list);
+
+                                card_data[ankiExampleSentencesSelected] = ''; // initialize or we get a 'undefined' as first value
+
+                                example_sentences_list.forEach(element =>
+                                {
+                                    card_data[ankiExampleSentencesSelected] += element.innerText + "<br>";
+                                });
+                            }
                         }
 
-                        console.log("Example sentences :", example_sentences_list);
-
-                        card_data[ankiExampleSentencesSelected] = ''; // initialize or we get a 'undefined' as first value
-
-                        example_sentences_list.forEach(element =>
+                        // Get audio for subtitle we are on, do it last, as sometimes we can run past the end of the
+                        // subtitle we want, then we end up saving the next subtitle instead.
+                        if (ankiAudioSelected)
                         {
-                            card_data[ankiExampleSentencesSelected] += element.innerText + "<br>";
-                        });
-                    }
-                }
+                            console.log("Fill ankiAudioSelected");
 
-                // Get audio for subtitle we are on, do it last, as sometimes we can run past the end of the
-                // subtitle we want, then we end up saving the next subtitle instead.
-                if (ankiAudioSelected)
-                {
-                    console.log("Fill ankiAudioSelected");
+                            let sub_index = 0;
+                            const element = document.querySelector('#lln-subs');
+                            if (element)
+                            {
+                                sub_index = element.dataset.index;
+                            }
+                            const audio_filename = `LLW_to_Anki_${video_id}_${sub_index}.webm`;
 
-                    let sub_index = 0;
-                    const element = document.querySelector('#lln-subs');
-                    if (element)
-                    {
-                        sub_index = element.dataset.index;
-                    }
-                    const audio_filename = `LLW_to_Anki_${video_id}_${sub_index}.webm`;
+                            if (!llw_audio_filenames.includes(audio_filename))
+                            {
+                                const audio_raw_data = await Get_Audio();
+                                if (audio_raw_data)
+                                {
+                                    llw_audio_filenames.push(audio_filename);
+                                    console.log(`${audio_filename} added to audio list`);
 
-                    if (!llw_audio_filenames.includes(audio_filename))
-                    {
-                        const audio_raw_data = await Get_Audio();
-                        if (audio_raw_data)
-                        {
-                            llw_audio_filenames.push(audio_filename);
-                            console.log(`${audio_filename} added to audio list`);
+                                    audio_data['data'] = audio_raw_data;
+                                    audio_data['filename'] = audio_filename;
 
-                            audio_data['data'] = audio_raw_data;
-                            audio_data['filename'] = audio_filename;
-
-                            card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
+                                    card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
+                                }
+                                else
+                                {
+                                    console.log("We did not get anything back for the Audio data")
+                                }
+                            }
+                            else
+                            {
+                                console.log(`${audio_filename} already exists.`);
+                                card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
+                            }
                         }
-                        else
-                        {
-                            console.log("We did not get anything back for the Audio data")
+
+                        console.log("Card data to send to Anki :", card_data);
+
+                        console.log("Audio Data :", audio_data);
+                        console.log("Image Data :", image_data);
+
+                        const anki_settings = {
+                            "deck": ankiDeckNameSelected,
+                            "note": ankiNoteNameSelected,
+                            "url": ankiConnectUrl || 'http://localhost:8765',
                         }
-                    }
-                    else
+
+                        // TODO : if anki is not open, then all the data for screenshots, audio, card data is still
+                        // collected, we should check way earlier if it is open or not
+                        LLW_Send_Data_To_Anki(anki_settings, card_data, image_data, audio_data);
+                    }).catch((error) =>
                     {
-                        console.log(`${audio_filename} already exists.`);
-                        card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
-                    }
-                }
+                        show_error_message("Permission Error, check Anki is open and extension has permission to connect to Anki (AnkiConnect config 'webCorsOriginList') :" + error);
 
-                console.log("Card data to send to Anki :", card_data);
+                        // Since Anki could be closed for this error to happen, it would be possible for the audio or screenshot data not to be sent to Anki,
+                        // resulting in the next time a card is made from the same subtitle, an audio or screenshot field is filled with a filename and no data.
+                        // We need to remove the filenames from our "cached" list
 
-                console.log("Audio Data :", audio_data);
-                console.log("Image Data :", image_data);
+                        //if (image_data && typeof image_data.filename === "string")
+                        //{
+                        //    const index = llw_screenshot_filenames.indexOf(image_data.filename);
+                        //    if (index !== -1)
+                        //    {
+                        //        llw_screenshot_filenames.splice(index, 1);
+                        //    }
+                        //}
 
-                const anki_settings = {
-                    "deck": ankiDeckNameSelected,
-                    "note": ankiNoteNameSelected,
-                    "url": ankiConnectUrl || 'http://localhost:8765',
-                }
+                        //if (audio_data && typeof audio_data.filename === "string")
+                        //{
+                        //    const index = llw_audio_filenames.indexOf(audio_data.filename);
+                        //    if (index !== -1)
+                        //    {
+                        //        llw_audio_filenames.splice(index, 1);
+                        //    }
+                        //}
 
-                // TODO : if anki is not open, then all the data for screenshots, audio, card data is still
-                // collected, we should check way earlier if it is open or not
-                LLW_Send_Data_To_Anki(anki_settings, card_data, image_data, audio_data);
-            }
-        );
+                        // NOTE : Should we remove the word from the highlight list?
+                        //if (fields && fields.ankiWordSelected)
+                        //    Highlight_Words_Remove_Word();
+                    });
+
+            });
     }
+
 
     //
     // HIGHLIGHT WORDS
@@ -938,74 +980,35 @@
 
         console.log("body : ", body);
 
-        const permission_data = '{"action":"requestPermission","version":6}';
 
         fetch(anki_settings.url, {
             method: "POST",
-            body: permission_data,
+            body: JSON.stringify(body),
         })
             .then((res) => res.json())
             .then((data) =>
             {
-                console.log("Permission fetch return : ", data);
-                fetch(anki_settings.url, {
-                    method: "POST",
-                    body: JSON.stringify(body),
-                })
-                    .then((res) => res.json())
-                    .then((data) =>
-                    {
-                        console.log("Fetch Return : ", data);
-                        let has_error = false;
+                console.log("Fetch Return : ", data);
+                let has_error = false;
 
-                        data.forEach((response, index) =>
-                        {
-                            if (response.result === null)
-                            {
-                                show_error_message(`Error in response ${index + 1}: ${response.error}`);
-                                has_error = true;
-                            }
-                        });
-
-                        if (!has_error)
-                        {
-                            show_success_message(`Successfully added to ANKI`);
-                        }
-                    })
-                    .catch((error) =>
+                data.forEach((response, index) =>
+                {
+                    if (response.result === null)
                     {
-                        show_error_message("Anki Post Error! " + error);
-                    })
-            }).catch((error) =>
+                        show_error_message(`Error in response ${index + 1}: ${response.error}`);
+                        has_error = true;
+                    }
+                });
+
+                if (!has_error)
+                {
+                    show_success_message(`Successfully added to ANKI`);
+                }
+            })
+            .catch((error) =>
             {
-                show_error_message("Permission Error, check Anki is open and extension has permission to connect to Anki (AnkiConnect config 'webCorsOriginList') :" + error);
-
-                // Since Anki could be closed for this error to happen, it would be possible for the audio or screenshot data not to be sent to Anki,
-                // resulting in the next time a card is made from the same subtitle, an audio or screenshot field is filled with a filename and no data.
-                // We need to remove the filenames from our "cached" list
-
-                if (image_data && typeof image_data.filename === "string")
-                {
-                    const index = llw_screenshot_filenames.indexOf(image_data.filename);
-                    if (index !== -1)
-                    {
-                        llw_screenshot_filenames.splice(index, 1);
-                    }
-                }
-
-                if (audio_data && typeof audio_data.filename === "string")
-                {
-                    const index = llw_audio_filenames.indexOf(audio_data.filename);
-                    if (index !== -1)
-                    {
-                        llw_audio_filenames.splice(index, 1);
-                    }
-                }
-
-                // NOTE : Should we remove the word from the highlight list?
-                //if (fields && fields.ankiWordSelected)
-                //    Highlight_Words_Remove_Word();
-            });
+                show_error_message("Anki Post Error! " + error);
+            })
     }
 
     //

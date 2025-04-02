@@ -469,6 +469,7 @@
                 "ankiBasicTranslationSelected",
                 "ankiExampleSentencesSelected",
                 "ankiOtherTranslationSelected",
+                "ankiBaseFormSelected",
                 "ankiAudioSelected",
                 "ankiFieldURL",
                 "ankiConnectUrl",
@@ -485,6 +486,7 @@
                 ankiBasicTranslationSelected,
                 ankiExampleSentencesSelected,
                 ankiOtherTranslationSelected,
+                ankiBaseFormSelected,
                 ankiAudioSelected,
                 ankiFieldURL,
                 ankiConnectUrl,
@@ -585,14 +587,21 @@
                         }
 
                         // Get full definition (this is the difinitions provided bellow the AI part)
-                        if (ankiOtherTranslationSelected)
+                        // base form is the form of the word found in a dictionary
+                        const full_definition_element = document.getElementsByClassName('lln-dict-section-full');
+                        if (full_definition_element.length)
                         {
-                            const full_definition_element = document.getElementsByClassName('lln-dict-section-full');
-                            if (full_definition_element.length)
+                            if (ankiOtherTranslationSelected)
                             {
                                 console.log("Fill ankiOtherTranslationSelected");
 
                                 card_data[ankiOtherTranslationSelected] = full_definition_element[0].innerHTML;
+                            }
+                            if (ankiBaseFormSelected)
+                            {
+                                console.log("Fill ankiBaseFormSelected");
+
+                                card_data[ankiBaseFormSelected] = full_definition_element[0].childNodes[1].childNodes[1].innerText;
                             }
                         }
 

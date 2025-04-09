@@ -430,10 +430,11 @@
             }
         });
 
+        const audio_maximum_recording_time = 16; // seconds
         const audio_recording_timeout = setTimeout(() =>
         {
             recorder.stop();
-            console.warn("Audio recording stopped after 5 seconds");
+            console.log(`Audio recording stopped after ${audio_maximum_recording_time} seconds`);
 
             video_element.removeEventListener('timeupdate', onTimeUpdate);
 
@@ -442,7 +443,7 @@
                 auto_pause_element.click(); // Turn off autopause
                 console.log("Autopause has been turned back OFF");
             }
-        }, 16000); // 16000ms = 16 seconds
+        }, audio_maximum_recording_time * 1000); // ms = s * 1000
 
         console.log("Audio recording started");
         audio_play_button.click();
@@ -555,15 +556,24 @@
                             // Get word selected
                             selected_word = dict_context[0].children[1].innerText;
 
+
                             if (ankiHighLightSavedWords)
                             {
-                                console.log("Fill ankiHighLightSavedWords new word");
-                                if (!llw_saved_words.includes(selected_word))
+                                const selected_element = document.getElementsByClassName('lln-is-open-in-full-dict')[0];
+                                if (selected_element)
                                 {
-                                    llw_saved_words.push(selected_word);
+                                    const data_word_key = selected_element.getAttribute('data-word-key');
+                                    const base_word_form = data_word_key.split('|')[1]; // "пешеходный"
 
-                                    Highlight_Words_Store();
+                                    console.log(`Fill ankiHighLightSavedWords : ${base_word_form}`);
+                                    if (!llw_saved_words.includes(base_word_form))
+                                    {
+                                        llw_saved_words.push(base_word_form);
+
+                                        Highlight_Words_Store();
+                                    }
                                 }
+
                             }
 
                             if (ankiWordSelected)
@@ -862,10 +872,15 @@
     {
         const subtitle_element = document.getElementsByClassName('lln-subs')[0];
 
-        subtitle_element.querySelectorAll('[data-word-key*="WORD|"').forEach((element) =>
+        subtitle_element.querySelectorAll('[data-word-key*="WORD|"]').forEach((element) =>
         {
-            const word = element.innerText.toLowerCase();
-            if (llw_saved_words.includes(word))
+            const inner_word = element.innerText.toLowerCase();
+
+            const data_word_key = element.getAttribute('data-word-key');
+            const key_parts = data_word_key ? data_word_key.split('|') : [];
+            const base_form_word = key_parts.length >= 2 ? key_parts[1].toLowerCase() : null;
+
+            if (llw_saved_words.includes(inner_word) || (base_form_word && llw_saved_words.includes(base_form_word)))
             {
                 element.style.color = llw_highlight_colour || 'LightCoral'; // #F08080
             }
@@ -889,7 +904,6 @@
         // NOTE : On extension removal, this stored list will be lost!
         chrome.storage.local.set({ ankiHighlightWordList: llw_saved_words });
     }
-
 
     function Highlight_Words_Remove_Word()
     {

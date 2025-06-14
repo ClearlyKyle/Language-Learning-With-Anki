@@ -105,6 +105,12 @@
 
     function Add_Anki_Button_To_Popup_Dictionary()
     {
+        if (document.getElementsByClassName('llw_anki_btn').length)
+        {
+            console.log("The Anki button is somewhere, so we wont add it again");
+            return;
+        }
+
         const btn_location = document.getElementsByClassName('lln-external-dicts-container')[0];
         if (!btn_location)
         {
@@ -113,14 +119,19 @@
         }
 
         const popup_dict_element = document.getElementsByClassName('lln-full-dict')[0];
-        if (popup_dict_element)
+        if (!popup_dict_element)
         {
-            llw_anki_btn.onclick = popup_dict_element.classList.contains("right") ?
-                Handle_Jump_To_Subtitle_With_Sidebar :
-                Subtitle_Dictionary_Get_Data;
+            console.warn("Error finding element 'lln-full-dict', unable to add the Anki button");
+            return;
         }
 
+        llw_anki_btn.onclick = popup_dict_element.classList.contains("right") ?
+            Handle_Jump_To_Subtitle_With_Sidebar :
+            Subtitle_Dictionary_Get_Data;
+
         btn_location.append(llw_anki_btn, llw_remove_highlight_word_btn);
+
+        console.log("Anki button has been added!!");
     }
 
     function Handle_Jump_To_Subtitle_With_Sidebar()
@@ -411,14 +422,14 @@
             };
         });
 
-        video_element.addEventListener('timeupdate', function onTimeUpdate()
+        function onTimeUpdate()
         {
             if (video_element.paused && video_element.readyState === 4)
             {
                 recorder.stop();
                 clearTimeout(audio_recording_timeout);
 
-                console.log("Audio recording stopped")
+                console.log("Audio recording automatically stopped")
                 video_element.removeEventListener('timeupdate', onTimeUpdate);
 
                 if (!auto_stop_initial_state)
@@ -428,7 +439,9 @@
                 }
                 video_element.pause();
             }
-        });
+        }
+
+        video_element.addEventListener('timeupdate', onTimeUpdate);
 
         const audio_maximum_recording_time = 16; // seconds
         const audio_recording_timeout = setTimeout(() =>
@@ -555,7 +568,6 @@
                         {
                             // Get word selected
                             selected_word = dict_context[0].children[1].innerText;
-
 
                             if (ankiHighLightSavedWords)
                             {
@@ -855,6 +867,7 @@
                                         {
                                             console.log("We need to update the subtitle highlights");
                                             Highlight_Words_In_Current_Subtitle();
+                                            Add_Anki_Button_To_Popup_Dictionary();
                                             break;
                                         }
                                     }

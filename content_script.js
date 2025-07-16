@@ -805,7 +805,7 @@
             {
                 llw_saved_words = ankiHighlightWordList || [];
                 llw_highlight_colour = ankiHighLightColour || 'LightCoral';
-                llw_highlight_words = true;
+                llw_highlight_words = ankiHighLightSavedWords;
 
                 if (!Array.isArray(llw_saved_words))
                 {
@@ -825,22 +825,19 @@
 
                         const observer = new MutationObserver((mutationList) =>
                         {
-                            if (llw_highlight_words)
+                            for (const mutation of mutationList)
                             {
-                                for (const mutation of mutationList)
+                                if (mutation.type === 'attributes')
                                 {
-                                    if (mutation.type === 'attributes')
+                                    const element = document.getElementById('lln-subs');
+                                    if (element)
                                     {
-                                        const element = document.getElementById('lln-subs');
-                                        if (element)
-                                        {
-                                            console.log("We need to update the subtitle highlights");
+                                        console.log("We need to update the subtitle highlights");
 
-                                            if (ankiHighLightSavedWords) Highlight_Words_In_Current_Subtitle();
+                                        if (llw_highlight_words) Highlight_Words_In_Current_Subtitle();
 
-                                            Add_Anki_Button_To_Popup_Dictionary();
-                                            break;
-                                        }
+                                        Add_Anki_Button_To_Popup_Dictionary();
+                                        break;
                                     }
                                 }
                             }

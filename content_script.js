@@ -70,31 +70,6 @@
 
                 Add_Functions_To_Side_Bar_Subs();
                 Highlight_Words_Setup();
-
-                let dict_wrap_observer = new MutationObserver(function (mutations)
-                {
-                    for (let mutation of mutations)
-                    {
-                        for (let new_elem of mutation.addedNodes)
-                        {
-                            if (new_elem instanceof HTMLElement)
-                            {
-                                if (new_elem.classList.contains('lln-full-dict'))
-                                {
-                                    console.log("Dictionary open, adding Anki button");
-                                    Add_Anki_Button_To_Popup_Dictionary();
-                                    break;
-                                }
-                            }
-
-                        }
-                    }
-                });
-                dict_wrap_observer.observe(lln_element, {
-                    attributes: true,
-                    childList: true,
-                    subtree: true
-                });
             }
         }, 100);
     }
@@ -107,21 +82,21 @@
     {
         if (document.getElementsByClassName('llw_anki_btn').length)
         {
-            console.log("The Anki button is somewhere, so we wont add it again");
+            //console.log("The Anki button is somewhere, so we wont add it again");
             return;
         }
 
         const btn_location = document.getElementsByClassName('lln-external-dicts-container')[0];
         if (!btn_location)
         {
-            console.warn("Error finding element 'lln-external-dicts-container', unable to add the Anki button");
+            console.log("Error finding element 'lln-external-dicts-container', unable to add the Anki button");
             return;
         }
 
         const popup_dict_element = document.getElementsByClassName('lln-full-dict')[0];
         if (!popup_dict_element)
         {
-            console.warn("Error finding element 'lln-full-dict', unable to add the Anki button");
+            console.log("Error finding element 'lln-full-dict', unable to add the Anki button");
             return;
         }
 
@@ -828,12 +803,6 @@
         chrome.storage.local.get(['ankiHighlightWordList', 'ankiHighLightColour', 'ankiHighLightSavedWords'],
             ({ ankiHighlightWordList, ankiHighLightColour, ankiHighLightSavedWords }) =>
             {
-                if (!ankiHighLightSavedWords) 
-                {
-                    console.log("No words will be highlighted");
-                    return;
-                }
-
                 llw_saved_words = ankiHighlightWordList || [];
                 llw_highlight_colour = ankiHighLightColour || 'LightCoral';
                 llw_highlight_words = true;
@@ -866,7 +835,9 @@
                                         if (element)
                                         {
                                             console.log("We need to update the subtitle highlights");
-                                            Highlight_Words_In_Current_Subtitle();
+
+                                            if (ankiHighLightSavedWords) Highlight_Words_In_Current_Subtitle();
+
                                             Add_Anki_Button_To_Popup_Dictionary();
                                             break;
                                         }

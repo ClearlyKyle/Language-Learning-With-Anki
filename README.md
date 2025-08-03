@@ -11,9 +11,14 @@ Language Reactor can be found here:
 ## Setup
 
 1) Must install the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin.
-2) Must leave the Anki desktop application open in order for Ankiconnect to connect to it.
+2) Download the extension source code (Blue "code" button then "Download Zip").
+    - Unzip the download, to have a folder called "Language-Learning-With-Anki-master", this is the extension source code
 3) Install the unpacked `Language-Learning-With-Anki` extension.
+    - Open a new chrome tab and go to : chrome://extensions/
+    - In the top right, toggle ON the "Developer mode"
+    - Click "Load Unpacked" and navigate to where the "Language-Learning-With-Anki-master" folder is, and choose that folder.
 4) Setup the URL (default is `http://localhost:8765`), deck and model values, making sure the top field of your note type has a [valid field](#empty-note-error) value.
+5) You **must** leave the Anki desktop application open in order for the extension to communicate with Ankiconnect.
 
 ## Usage
 
@@ -23,7 +28,7 @@ The "RC" option, will remove the colour from the selected word
 
 If the highlight word option is turned on then all words sent to Anki will be saved and highlighted, with this setting turned off, words will not be saved so will not be highlighted if turned back on. 
 
-When using the audio field, the extension will replay the subtitle again to collect the audio. Let the video play and wait for the success popup before doing anything else, interupting the playblack may cause a half finished audio track. Subsequent cards made with the same subtitle, will not need to recreate the audio.
+When using the audio field, the extension will replay the subtitle again to collect the audio. Let the video play and wait for the success popup before doing anything else, interupting the playblack may cause a half finished audio track. Subsequent cards made with the same subtitle, but the audio will not need to be re-recorded.
 
 ![bubble-screenshot](https://raw.githubusercontent.com/ClearlyKyle/Language-Learning-With-Anki/master/screenshots/popup.PNG)
 

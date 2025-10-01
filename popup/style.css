@@ -10,7 +10,7 @@ body {
 
 label {
     display: block;
-    margin: 10px 0;
+    margin: 9px 0;
 }
 
 label span {
@@ -31,6 +31,10 @@ label input {
     vertical-align: middle;
 }
 
+#ankiPuaseOnSavedWord {
+    margin-left: 43px;
+}
+
 #ankiConnectUrl {
     width: 190px;
     height: 20px;
@@ -46,7 +50,9 @@ label input {
 #ankiHighLightColour {
     display: inline-block;
     width: 100px;
-    margin: 0 auto;
+    height: 20px;
+    border: none;
+    cursor: pointer;
 }
 
 #ankiHighLightSavedWords {

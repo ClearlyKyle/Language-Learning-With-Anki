@@ -16,6 +16,7 @@
     let llw_saved_words = [];  // NOTE : On extension removal, this stored list will be lost!
     let llw_highlight_colour = "";
     let llw_highlight_words = false;
+    let llw_pause_on_saved_word = false;
 
     const llw_anki_btn = document.createElement("div");
     llw_anki_btn.className = "llw_anki_btn lln-external-dict-btn tippy";
@@ -82,7 +83,7 @@
     {
         if (document.getElementsByClassName('llw_anki_btn').length)
         {
-            //console.log("The Anki button is somewhere, so we wont add it again");
+            console.log("The Anki button is somewhere, so we wont add it again");
             return;
         }
 
@@ -794,25 +795,32 @@
                     console.log(`${key} has changed from '${oldValue}' to '${newValue}'`);
                     llw_highlight_colour = newValue;
                 }
+
+                if (key === 'ankiPuaseOnSavedWord')
+                {
+                    console.log(`${key} has changed from '${oldValue}' to '${newValue}'`);
+                    llw_pause_on_saved_word = newValue;
+                }
             }
         }
     });
 
     function Highlight_Words_Setup()
     {
-        chrome.storage.local.get(['ankiHighlightWordList', 'ankiHighLightColour', 'ankiHighLightSavedWords'],
-            ({ ankiHighlightWordList, ankiHighLightColour, ankiHighLightSavedWords }) =>
+        chrome.storage.local.get(['ankiHighlightWordList', 'ankiHighLightColour', 'ankiHighLightSavedWords', 'ankiPuaseOnSavedWord'],
+            ({ ankiHighlightWordList, ankiHighLightColour, ankiHighLightSavedWords, ankiPuaseOnSavedWord }) =>
             {
                 llw_saved_words = ankiHighlightWordList || [];
                 llw_highlight_colour = ankiHighLightColour || 'LightCoral';
                 llw_highlight_words = ankiHighLightSavedWords;
+                llw_pause_on_saved_word = ankiPuaseOnSavedWord;
 
                 if (!Array.isArray(llw_saved_words))
                 {
                     console.error("llw_saved_words is not an array.");
                 }
 
-                console.log("Highlight word settings:", { llw_saved_words, llw_highlight_colour, llw_highlight_words });
+                console.log("Highlight word settings:", { llw_saved_words, llw_highlight_colour, llw_highlight_words, llw_pause_on_saved_word });
 
                 console.log("Waiting for subtitle content element...");
                 const wait_for_subtitles_to_show = setInterval(function ()
@@ -834,7 +842,7 @@
                                     {
                                         console.log("We need to update the subtitle highlights");
 
-                                        if (llw_highlight_words) Highlight_Words_In_Current_Subtitle();
+                                        Highlight_Words_In_Current_Subtitle(llw_highlight_words, llw_pause_on_saved_word);
 
                                         Add_Anki_Button_To_Popup_Dictionary();
                                         break;
@@ -849,9 +857,15 @@
         );
     }
 
-    function Highlight_Words_In_Current_Subtitle()
+    function Hightlight_Pause_On_Saved_Word()
+    {
+
+    }
+
+    function Highlight_Words_In_Current_Subtitle(should_highlight, should_pause)
     {
         const subtitle_element = document.getElementsByClassName('lln-subs')[0];
+        let a_saved_word_was_found_in_subtitle = false;
 
         subtitle_element.querySelectorAll('[data-word-key*="WORD|"]').forEach((element) =>
         {
@@ -863,9 +877,22 @@
 
             if (llw_saved_words.includes(inner_word) || (base_form_word && llw_saved_words.includes(base_form_word)))
             {
-                element.style.color = llw_highlight_colour || 'LightCoral'; // #F08080
+                if (should_highlight) element.style.color = llw_highlight_colour || 'LightCoral'; // #F08080
+                a_saved_word_was_found_in_subtitle = true;
             }
         });
+
+        if (a_saved_word_was_found_in_subtitle && should_pause)
+        {
+            const auto_pause_element = document.getElementsByClassName('lln-toggle')[0];
+            if (auto_pause_element && !auto_pause_element.checked)
+            {
+                auto_pause_element.click();
+                console.log(`Autopause should be 'ON'`);
+
+                // TODO : wait for video to pause then toggle it back to initial state?
+            }
+        }
     }
 
     function Highlight_Words_Store()

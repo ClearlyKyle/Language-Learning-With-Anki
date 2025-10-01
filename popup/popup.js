@@ -37,6 +37,7 @@ const anki_id_names = [
     "ankiExampleSentenceSource",
     "ankiHighLightSavedWords",
     "ankiHighLightColour",
+    "ankiPuaseOnSavedWord",
 
     ...anki_field_names];
 
@@ -101,7 +102,6 @@ function tab_setup()
 function words_setup()
 {
     words_load();
-
 
     // DOWNLOAD
     const words_download_btn = document.getElementById("wordsDownloadBtn");
@@ -281,6 +281,7 @@ function settings_setup()
         anki_storage_values["ankiExampleSentenceSource"] = anki_field_elements.ankiExampleSentenceSource.value;
         anki_storage_values["ankiHighLightSavedWords"] = anki_field_elements.ankiHighLightSavedWords.checked;
         anki_storage_values["ankiHighLightColour"] = anki_field_elements.ankiHighLightColour.value;
+        anki_storage_values["ankiPuaseOnSavedWord"] = anki_field_elements.ankiPuaseOnSavedWord.value;
 
         console.log(anki_storage_values);
 
@@ -402,6 +403,8 @@ function Update_Selections_With_Saved_Values()
 
         anki_field_elements.ankiHighLightSavedWords.checked = res.ankiHighLightSavedWords || false;
         anki_field_elements.ankiHighLightColour.value = res.ankiHighLightColour || "#ffffff";
+
+        anki_field_elements.ankiPuaseOnSavedWord.checked = res.ankiPuaseOnSavedWord || false;
 
         // Frist we need to get all deck names and note types, 
         // after we get a note type, we can then fetch for all the fields of that note type

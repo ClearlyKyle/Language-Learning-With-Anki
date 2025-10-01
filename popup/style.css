@@ -5,18 +5,19 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    font-size: 14px;
 }
 
 label {
     display: block;
-    margin: 9px 0;
+    margin: 10px 0;
 }
 
 label span {
     display: inline-block;
     vertical-align: middle;
     text-align: right;
-    width: 90px;
+    width: 140px;
 }
 
 label select {
@@ -82,8 +83,6 @@ label input {
     overflow: hidden;
     max-height: calc(600px - 33px);
     display: none;
-    /* hidden by default */
-    /*padding: 6px 12px;*/
 }
 
 #Words {
@@ -91,30 +90,35 @@ label input {
     flex: 1 1 auto;
 }
 
-#wordList {
+#wordsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    margin-top: 3px;
+    padding-left: 10px;
+}
+
+#wordsButtons {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+#wordsList {
     padding-left: 40px;
     margin: 5px;
-    font-size: 14px;
     line-height: 1;
     height: calc(600px - 70px);
 }
 
-#wordList li {
+#wordsList li {
     margin-bottom: 6px;
 }
 
-#wordList {
+#wordsList {
     list-style-type: decimal;
 }
-
-/*#wordList li {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-    font-size: 16px;
-    line-height: 1.5;
-}*/
 
 .deleteWordBtn {
     background-color: transparent;
@@ -123,7 +127,6 @@ label input {
     font-weight: bold;
     cursor: pointer;
     padding: 0 4px;
-    font-size: 16px;
 }
 
 .deleteWordBtn:hover {

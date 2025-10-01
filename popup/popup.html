@@ -91,8 +91,14 @@
 
     <!-- Words tab -->
     <div id="Words" class="tabcontent">
-        <span id="wordsHeader">Total words :</span>
-        <button id="wordsDownloadBtn">Download</button>
+        <div id="wordsHeader">
+            <span id="wordsTotal">Total words :</span>
+            <div id="wordsButtons">
+                <button id="wordsDownloadBtn">&#8681;</button>
+                <button id="wordsUploadBtn">&#8679;</button>
+                <input type="file" id="wordsUploadInput" accept=".txt" style="display:none" />
+            </div>
+        </div>
         <ol id="wordsList"></ol>
     </div>
 </body>

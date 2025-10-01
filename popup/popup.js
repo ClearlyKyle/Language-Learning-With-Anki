@@ -101,6 +101,8 @@ function tab_setup()
 function words_setup()
 {
     const words_download_btn = document.getElementById("wordsDownloadBtn");
+    const words_upload_btn = document.getElementById("wordsUploadBtn");
+    const words_upload_input = document.getElementById("wordsUploadInput");
 
     words_load();
 
@@ -123,11 +125,45 @@ function words_setup()
         });
     });
 
+    words_upload_btn.addEventListener("click", () =>
+    {
+        words_upload_input.click(); // open file picker
+    });
+
+    words_upload_input.addEventListener("change", (event) =>
+    {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e)
+        {
+            const text = e.target.result;
+
+            // Split words by newlines, trim whitespace, remove empty lines
+            const new_words = text.split(/\r?\n/).map(w => w.trim()).filter(Boolean);
+
+            // NOTE : do we want to upload and add the words to the current list,
+            //          or replace the list entirely
+            chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
+            {
+                const all_words = Array.from(new Set([...data.ankiHighlightWordList, ...new_words]));
+                chrome.storage.local.set({ ankiHighlightWordList: all_words }, () =>
+                {
+                    words_load();
+                });
+            });
+        };
+        reader.readAsText(file);
+
+        words_upload_input.value = "";
+    });
+
 }
 
 function words_load()
 {
-    const words_header = document.getElementById("wordsHeader");
+    const words_total = document.getElementById("wordsTotal");
     const word_list = document.getElementById("wordsList");
 
     chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
@@ -137,7 +173,7 @@ function words_load()
 
         console.log(words);
 
-        words_header.textContent = `Total words: ${words.length}`;
+        words_total.textContent = `Total words: ${words.length}`;
 
         list.innerHTML = ""; // clear old entries
 
@@ -153,11 +189,11 @@ function words_load()
             {
                 const li = document.createElement("li");
 
-                const delBtn = document.createElement("button");
-                delBtn.textContent = "x";
-                delBtn.className = "deleteWordBtn";
-                delBtn.title = "Delete word";
-                delBtn.addEventListener("click", () =>
+                const delete_btn = document.createElement("button");
+                delete_btn.textContent = "x";
+                delete_btn.className = "deleteWordBtn";
+                delete_btn.title = "Delete word";
+                delete_btn.addEventListener("click", () =>
                 {
                     words.splice(index, 1);
                     chrome.storage.local.set({ ankiHighlightWordList: words }, words_load);
@@ -166,7 +202,7 @@ function words_load()
                 const span = document.createElement("span");
                 span.textContent = word;
 
-                li.appendChild(delBtn);
+                li.appendChild(delete_btn);
                 li.appendChild(span);
                 word_list.appendChild(li);
             });

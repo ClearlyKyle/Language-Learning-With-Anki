@@ -9,11 +9,11 @@
     // GLOBALS
     //
 
-    // NOTE : This wont be presist between page loads
+    // NOTE : None of this will be presist between page loads
     let llw_screenshot_filenames = [];
     let llw_audio_filenames = [];
 
-    let llw_saved_words = [];
+    let llw_saved_words = [];  // NOTE : On extension removal, this stored list will be lost!
     let llw_highlight_colour = "";
     let llw_highlight_words = false;
 
@@ -882,7 +882,6 @@
         //llw_saved_words = unique_words_only;
         //chrome.storage.local.set({ ankiHighlightWordList: unique_words_only });
 
-        // NOTE : On extension removal, this stored list will be lost!
         chrome.storage.local.set({ ankiHighlightWordList: llw_saved_words });
     }
 

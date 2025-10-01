@@ -60,8 +60,36 @@ else
     init();
 }
 
+let tab_contents = [];
+let tab_links = [];
+
+// TODO : another method instead of this id
+function tab_open(tab_id)
+{
+    tab_contents.forEach(tc => tc.style.display = "none");
+    tab_links.forEach(btn => btn.classList.remove("active"));
+
+    tab_contents[tab_id].style.display = "block";
+    tab_links[tab_id].classList.add("active");
+}
+
 function init()
 {
+    // TABS Setup
+    tab_contents = document.querySelectorAll(".tabcontent");
+
+    tab_links = [
+        document.querySelector(".tablinks.tabSettings"),
+        document.querySelector(".tablinks.tabWords")
+    ];
+
+    tab_links[0].addEventListener("click", () => tab_open(0));
+    tab_links[1].addEventListener("click", () => tab_open(1));
+
+    tab_open(0); // default tab
+
+    // ANKI Setup
+
     for (let i = 0; i < anki_id_names.length; i++)
     {
         const element_name = anki_id_names[i];

@@ -6,79 +6,94 @@
 </head>
 
 <body>
-    <form>
-        <label>
-            <span>Localhost</span>
-            <input type="text" id="ankiConnectUrl" value="http://localhost:8765">
-        </label>
-        <hr>
-        <label>
-            <span>Deck</span>
-            <select id="ankiDeckNameSelected"></select>
-        </label>
-        <label>
-            <span>Card</span>
-            <select id="ankiNoteNameSelected"></select>
-        </label>
-        <hr>
-        <label>
-            <span>Screenshot</span>
-            <select id="ankiFieldScreenshotSelected"></select>
-        </label>
-        <label>
-            <span>Subtitle</span>
-            <select id="ankiSubtitleSelected"></select>
-        </label>
-        <label>
-            <span>Subtitle Translation</span>
-            <select id="ankiSubtitleTranslation"></select>
-        </label>
-        <label>
-            <span>Word</span>
-            <select id="ankiWordSelected"></select>
-        </label>
-        <label>
-            <span>Basic Translation</span>
-            <select id="ankiBasicTranslationSelected"></select>
-        </label>
-        <label>
-            <span>Example Sentences</span>
-            <select id="ankiExampleSentencesSelected"></select>
-        </label>
-        <label>
-            <span>Example Source</span>
-            <select id="ankiExampleSentenceSource">
-                <option value="Current">Current</option>
-                <option value="Tatoeba">Tatoeba</option>
-                <option value="Both">Both</option>
-                <option value="None">None</option>
-            </select>
-        </label>
-        <label>
-            <span>Other Translation</span>
-            <select id="ankiOtherTranslationSelected"></select>
-        </label>
-        <label>
-            <span>Base Form</span>
-            <select id="ankiBaseFormSelected"></select>
-        </label>
-        <label>
-            <span>Audio</span>
-            <select id="ankiAudioSelected"></select>
-        </label>
-        <label>
-            <span>URL</span>
-            <select id="ankiFieldURL"></select>
-        </label>
-        <hr>
-        <label>
-            <span id="highlightSpan">Highlight</span>
-            <input type="checkbox" id="ankiHighLightSavedWords"></input>
-            <input type="color" id="ankiHighLightColour" value="#ffffff"></input>
-        </label>
-        <hr>
-        <input id="saveAnkiBtn" type="button" value="Save">
-    </form>
+    <!-- Tab links -->
+    <div class="tab">
+        <button class="tablinks tabSettings">Settings</button>
+        <button class="tablinks tabWords">Words</button>
+    </div>
+
+    <!-- Settings tab -->
+    <div id="Settings" class="tabcontent">
+        <form>
+            <label>
+                <span>Localhost</span>
+                <input type="text" id="ankiConnectUrl" value="http://localhost:8765">
+            </label>
+            <hr>
+            <label>
+                <span>Deck</span>
+                <select id="ankiDeckNameSelected"></select>
+            </label>
+            <label>
+                <span>Card</span>
+                <select id="ankiNoteNameSelected"></select>
+            </label>
+            <hr>
+            <label>
+                <span>Screenshot</span>
+                <select id="ankiFieldScreenshotSelected"></select>
+            </label>
+            <label>
+                <span>Subtitle</span>
+                <select id="ankiSubtitleSelected"></select>
+            </label>
+            <label>
+                <span>Subtitle Translation</span>
+                <select id="ankiSubtitleTranslation"></select>
+            </label>
+            <label>
+                <span>Word</span>
+                <select id="ankiWordSelected"></select>
+            </label>
+            <label>
+                <span>Basic Translation</span>
+                <select id="ankiBasicTranslationSelected"></select>
+            </label>
+            <label>
+                <span>Example Sentences</span>
+                <select id="ankiExampleSentencesSelected"></select>
+            </label>
+            <label>
+                <span>Example Source</span>
+                <select id="ankiExampleSentenceSource">
+                    <option value="Current">Current</option>
+                    <option value="Tatoeba">Tatoeba</option>
+                    <option value="Both">Both</option>
+                    <option value="None">None</option>
+                </select>
+            </label>
+            <label>
+                <span>Other Translation</span>
+                <select id="ankiOtherTranslationSelected"></select>
+            </label>
+            <label>
+                <span>Base Form</span>
+                <select id="ankiBaseFormSelected"></select>
+            </label>
+            <label>
+                <span>Audio</span>
+                <select id="ankiAudioSelected"></select>
+            </label>
+            <label>
+                <span>URL</span>
+                <select id="ankiFieldURL"></select>
+            </label>
+            <hr>
+            <label>
+                <span>Highlight</span>
+                <input type="checkbox" id="ankiHighLightSavedWords"></input>
+                <input type="color" id="ankiHighLightColour" value="#ffffff"></input>
+            </label>
+            <hr>
+            <input id="saveAnkiBtn" type="button" value="Save">
+        </form>
+    </div>
+
+    <!-- Words tab -->
+    <div id="Words" class="tabcontent">
+        <h3>Collected Words</h3>
+        <ul id="wordList"></ul>
+    </div>
 </body>
 
 </html>

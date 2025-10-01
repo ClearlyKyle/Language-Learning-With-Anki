@@ -1,55 +1,87 @@
+html,
 body {
-  width: 350px;
-}
-
-form {
-  margin: 10px 0;
-  text-align: left;
+    width: 400px;
+    height: 600px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 label {
-  display: block;
-  margin: 10px 0;
+    display: block;
+    margin: 9px 0;
 }
 
 label span {
-  display: inline-block;
-  vertical-align: middle;
-  text-align: right;
-  width: 90px;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: right;
+    width: 90px;
 }
 
-select {
-  width: 190px;
-  vertical-align: middle;
-  margin-left: 10px;
-  height: 20px;
+label select {
+    width: 190px;
+    vertical-align: middle;
+    margin-left: 10px;
+    height: 20px;
+}
+
+label input {
+    vertical-align: middle;
 }
 
 #ankiConnectUrl {
-  width: 190px;
-  height: 20px;
-  margin-left: 10px;
+    width: 190px;
+    height: 20px;
+    margin-left: 10px;
 }
 
 #saveAnkiBtn {
-  display: block;
-  width: 100px;
-  margin: 0 auto;
+    display: block;
+    width: 100px;
+    margin: 0 auto;
 }
 
 #ankiHighLightColour {
-  display: inline-block;
-  width: 100px;
-  margin: 0 auto;
+    display: inline-block;
+    width: 100px;
+    margin: 0 auto;
 }
 
 #ankiHighLightSavedWords {
-  display: inline-block;
-  width: 100px;
-  margin: 0 auto;
+    display: inline-block;
+    width: 100px;
+    margin: 0 auto;
 }
 
-#highlightSpan {
-  margin-top: -10;
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 8px 16px;
+    transition: 0.3s;
+}
+
+.tab button:hover {
+    background-color: #ddd;
+}
+
+.tab button.active {
+    background-color: #ccc;
+}
+
+.tabcontent {
+    overflow: hidden;
+    max-height: calc(600px - 10px);
+    display: none;
+    /* hidden by default */
+    padding: 6px 12px;
 }

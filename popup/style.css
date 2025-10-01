@@ -67,7 +67,7 @@ label input {
     border: none;
     outline: none;
     cursor: pointer;
-    padding: 8px 16px;
+    padding: 6px 16px;
     transition: 0.3s;
 }
 
@@ -81,7 +81,7 @@ label input {
 
 .tabcontent {
     overflow: hidden;
-    max-height: calc(600px - 33px);
+    /*max-height: calc(600px - 33px);*/
     display: none;
 }
 

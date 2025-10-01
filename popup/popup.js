@@ -100,11 +100,11 @@ function tab_setup()
 
 function words_setup()
 {
-    const words_download_btn = document.getElementById("wordsDownloadBtn");
-    const words_upload_btn = document.getElementById("wordsUploadBtn");
-    const words_upload_input = document.getElementById("wordsUploadInput");
-
     words_load();
+
+
+    // DOWNLOAD
+    const words_download_btn = document.getElementById("wordsDownloadBtn");
 
     words_download_btn.addEventListener("click", () =>
     {
@@ -125,6 +125,10 @@ function words_setup()
         });
     });
 
+    // UPLOAD
+    const words_upload_btn = document.getElementById("wordsUploadBtn");
+    const words_upload_input = document.getElementById("wordsUploadInput");
+
     words_upload_btn.addEventListener("click", () =>
     {
         words_upload_input.click(); // open file picker
@@ -140,7 +144,7 @@ function words_setup()
         {
             const text = e.target.result;
 
-            // Split words by newlines, trim whitespace, remove empty lines
+            // split words by newlines, trim whitespace, remove empty lines
             const new_words = text.split(/\r?\n/).map(w => w.trim()).filter(Boolean);
 
             // NOTE : do we want to upload and add the words to the current list,
@@ -157,6 +161,45 @@ function words_setup()
         reader.readAsText(file);
 
         words_upload_input.value = "";
+    });
+
+    // USER ADD 
+    const words_add_input = document.getElementById("wordsAddInput");
+    const words_add_button = document.getElementById("wordsAddBtn");
+
+    words_add_button.addEventListener("click", () =>
+    {
+        const word = words_add_input.value.trim();
+        if (!word) return;
+
+        chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
+        {
+            const words = data.ankiHighlightWordList;
+
+            if (!words.includes(word))
+            {
+                words.push(word);
+                chrome.storage.local.set({ ankiHighlightWordList: words }, () =>
+                {
+                    words_load();
+                    words_add_input.value = "";
+                });
+            }
+            else
+            {
+                alert("Word already exists!");
+            }
+        });
+    });
+
+    // allow pressing Enter in the input to add
+    words_add_input.addEventListener("keydown", (e) =>
+    {
+        if (e.key === "Enter")
+        {
+            words_add_button.click();
+            e.preventDefault();
+        }
     });
 
 }

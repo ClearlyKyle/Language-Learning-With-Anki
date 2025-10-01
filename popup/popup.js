@@ -51,14 +51,20 @@ let anki_storage_values = Object.fromEntries(anki_id_names.map((key) => [key, ""
 //
 // STARTUP
 //
-if (document.readyState === "loading")
+(document.readyState === "loading") ?
+    document.addEventListener("DOMContentLoaded", () => startup()) :
+    startup();
+
+function startup()
 {
-    document.addEventListener("DOMContentLoaded", () => init());
+    tab_setup();
+    settings_setup();
+    words_setup();
 }
-else
-{
-    init();
-}
+
+//
+// TABS
+//
 
 let tab_contents = [];
 let tab_links = [];
@@ -73,9 +79,8 @@ function tab_open(tab_id)
     tab_links[tab_id].classList.add("active");
 }
 
-function init()
+function tab_setup()
 {
-    // TABS Setup
     tab_contents = document.querySelectorAll(".tabcontent");
 
     tab_links = [
@@ -87,9 +92,69 @@ function init()
     tab_links[1].addEventListener("click", () => tab_open(1));
 
     tab_open(0); // default tab
+}
 
-    // ANKI Setup
+//
+// WORDS
+//
 
+function words_setup()
+{
+    const words_header = document.getElementById("wordsHeader");
+    const words_download_btn = document.getElementById("wordsDownloadBtn");
+
+    chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
+    {
+        const words = data.ankiHighlightWordList;
+        const list = document.getElementById("wordsList");
+
+        words_header.textContent = `Total words: ${words.length}`;
+
+        list.innerHTML = ""; // clear old entries
+
+        if (words.length === 0)
+        {
+            const li = document.createElement("li");
+            li.textContent = "(No words saved yet)";
+            list.appendChild(li);
+        }
+        else
+        {
+            words.forEach(word =>
+            {
+                const li = document.createElement("li");
+                li.textContent = word; z
+                list.appendChild(li);
+            });
+        }
+    });
+
+    words_download_btn.addEventListener("click", () =>
+    {
+        chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
+        {
+            const words = data.ankiHighlightWordList;
+            const blob = new Blob([words.join("\n")], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "words.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            URL.revokeObjectURL(url);
+        });
+    });
+}
+
+//
+// SETTINGS
+//
+
+function settings_setup()
+{
     for (let i = 0; i < anki_id_names.length; i++)
     {
         const element_name = anki_id_names[i];

@@ -80,8 +80,29 @@ label input {
 
 .tabcontent {
     overflow: hidden;
-    max-height: calc(600px - 10px);
+    max-height: calc(600px - 33px);
     display: none;
     /* hidden by default */
-    padding: 6px 12px;
+    /*padding: 6px 12px;*/
+}
+
+#Words {
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+#wordList {
+    padding-left: 40px;
+    margin: 5px;
+    font-size: 14px;
+    line-height: 1;
+    height: calc(600px - 70px);
+}
+
+#wordList li {
+    margin-bottom: 6px;
+}
+
+#wordList {
+    list-style-type: decimal;
 }

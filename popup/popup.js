@@ -185,7 +185,8 @@ function Add_Options_To_Field_Dropdown_Promise(element_id, data, saved_value)
         }
 
         const blank = document.createElement("option");
-        blank.value = blank.text = "";
+        blank.value = "";
+        blank.text = "<blank>";
         dropdown.add(blank);
 
         dropdown.value = saved_value;

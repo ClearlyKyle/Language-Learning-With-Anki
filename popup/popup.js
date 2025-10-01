@@ -100,34 +100,9 @@ function tab_setup()
 
 function words_setup()
 {
-    const words_header = document.getElementById("wordsHeader");
     const words_download_btn = document.getElementById("wordsDownloadBtn");
 
-    chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
-    {
-        const words = data.ankiHighlightWordList;
-        const list = document.getElementById("wordsList");
-
-        words_header.textContent = `Total words: ${words.length}`;
-
-        list.innerHTML = ""; // clear old entries
-
-        if (words.length === 0)
-        {
-            const li = document.createElement("li");
-            li.textContent = "(No words saved yet)";
-            list.appendChild(li);
-        }
-        else
-        {
-            words.forEach(word =>
-            {
-                const li = document.createElement("li");
-                li.textContent = word; z
-                list.appendChild(li);
-            });
-        }
-    });
+    words_load();
 
     words_download_btn.addEventListener("click", () =>
     {
@@ -146,6 +121,56 @@ function words_setup()
 
             URL.revokeObjectURL(url);
         });
+    });
+
+}
+
+function words_load()
+{
+    const words_header = document.getElementById("wordsHeader");
+    const word_list = document.getElementById("wordsList");
+
+    chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
+    {
+        const words = data.ankiHighlightWordList;
+        const list = document.getElementById("wordsList");
+
+        console.log(words);
+
+        words_header.textContent = `Total words: ${words.length}`;
+
+        list.innerHTML = ""; // clear old entries
+
+        if (words.length === 0)
+        {
+            const li = document.createElement("li");
+            li.textContent = "(No words saved yet)";
+            list.appendChild(li);
+        }
+        else
+        {
+            words.forEach((word, index) =>
+            {
+                const li = document.createElement("li");
+
+                const delBtn = document.createElement("button");
+                delBtn.textContent = "x";
+                delBtn.className = "deleteWordBtn";
+                delBtn.title = "Delete word";
+                delBtn.addEventListener("click", () =>
+                {
+                    words.splice(index, 1);
+                    chrome.storage.local.set({ ankiHighlightWordList: words }, words_load);
+                });
+
+                const span = document.createElement("span");
+                span.textContent = word;
+
+                li.appendChild(delBtn);
+                li.appendChild(span);
+                word_list.appendChild(li);
+            });
+        }
     });
 }
 

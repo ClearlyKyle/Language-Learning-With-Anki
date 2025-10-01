@@ -106,3 +106,26 @@ label input {
 #wordList {
     list-style-type: decimal;
 }
+
+/*#wordList li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: 16px;
+    line-height: 1.5;
+}*/
+
+.deleteWordBtn {
+    background-color: transparent;
+    border: none;
+    color: red;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 4px;
+    font-size: 16px;
+}
+
+.deleteWordBtn:hover {
+    color: darkred;
+}

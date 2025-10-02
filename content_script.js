@@ -29,6 +29,12 @@
     llw_remove_highlight_word_btn.setAttribute("data-tippy-content", "Remove word from being highlighted");
     llw_remove_highlight_word_btn.onclick = Highlight_Words_Remove_Word;
 
+    const llw_remove_audio_btn = document.createElement("div");
+    llw_remove_audio_btn.className = "llw_remove_audio_btn-btn lln-external-dict-btn tippy";
+    llw_remove_audio_btn.innerHTML = "RA";
+    llw_remove_audio_btn.setAttribute("data-tippy-content", "Remove audio for current sub from the cache");
+    llw_remove_audio_btn.onclick = Subtitle_Audio_Remove;
+
     //
     // STARTUP
     //
@@ -105,7 +111,7 @@
             Handle_Jump_To_Subtitle_With_Sidebar :
             Subtitle_Dictionary_Get_Data;
 
-        btn_location.append(llw_anki_btn, llw_remove_highlight_word_btn);
+        btn_location.append(llw_anki_btn, llw_remove_highlight_word_btn, llw_remove_audio_btn);
 
         console.log("Anki button has been added!!");
     }
@@ -339,7 +345,7 @@
     {
         let video_element = null;
 
-        // NOTE : URL and Sreenshot functions use this too, set global instead?
+        // NOTE : URL and Screenshot functions use this too, set global instead?
         if (window.location.href.includes("youtube.com/watch"))
         {
             video_element = document.getElementsByTagName('video')[0];
@@ -439,6 +445,22 @@
         recorder.start();
 
         return audio_promise;
+    }
+
+    function Subtitle_Audio_Remove()
+    {
+        let sub_index = 0;
+        const element = document.querySelector('#lln-subs');
+        if (element)
+        {
+            sub_index = element.dataset.index;
+        }
+
+        [video_url, video_id, video_current_time] = Get_Video_URL();
+
+        const audio_filename = `LLW_to_Anki_${video_id}_${sub_index}.webm`;
+
+        llw_audio_filenames = llw_audio_filenames.filter(name => name !== audio_filename);
     }
 
     async function Subtitle_Dictionary_Get_Data() // This is where we pull all the data we want from the popup dictionary

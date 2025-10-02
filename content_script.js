@@ -9,13 +9,14 @@
     // GLOBALS
     //
 
-    // NOTE : This wont be presist between page loads
+    // NOTE : None of this will be presist between page loads
     let llw_screenshot_filenames = [];
     let llw_audio_filenames = [];
 
-    let llw_saved_words = [];
+    let llw_saved_words = [];  // NOTE : On extension removal, this stored list will be lost!
     let llw_highlight_colour = "";
     let llw_highlight_words = false;
+    let llw_pause_on_saved_word = false;
 
     const llw_anki_btn = document.createElement("div");
     llw_anki_btn.className = "llw_anki_btn lln-external-dict-btn tippy";
@@ -27,6 +28,12 @@
     llw_remove_highlight_word_btn.innerHTML = "RC";
     llw_remove_highlight_word_btn.setAttribute("data-tippy-content", "Remove word from being highlighted");
     llw_remove_highlight_word_btn.onclick = Highlight_Words_Remove_Word;
+
+    const llw_remove_audio_btn = document.createElement("div");
+    llw_remove_audio_btn.className = "llw_remove_audio_btn-btn lln-external-dict-btn tippy";
+    llw_remove_audio_btn.innerHTML = "RA";
+    llw_remove_audio_btn.setAttribute("data-tippy-content", "Remove audio for current sub from the cache");
+    llw_remove_audio_btn.onclick = Subtitle_Audio_Remove;
 
     //
     // STARTUP
@@ -82,7 +89,7 @@
     {
         if (document.getElementsByClassName('llw_anki_btn').length)
         {
-            //console.log("The Anki button is somewhere, so we wont add it again");
+            console.log("The Anki button is somewhere, so we wont add it again");
             return;
         }
 
@@ -104,7 +111,7 @@
             Handle_Jump_To_Subtitle_With_Sidebar :
             Subtitle_Dictionary_Get_Data;
 
-        btn_location.append(llw_anki_btn, llw_remove_highlight_word_btn);
+        btn_location.append(llw_anki_btn, llw_remove_highlight_word_btn, llw_remove_audio_btn);
 
         console.log("Anki button has been added!!");
     }
@@ -338,7 +345,7 @@
     {
         let video_element = null;
 
-        // NOTE : URL and Sreenshot functions use this too, set global instead?
+        // NOTE : URL and Screenshot functions use this too, set global instead?
         if (window.location.href.includes("youtube.com/watch"))
         {
             video_element = document.getElementsByTagName('video')[0];
@@ -440,6 +447,22 @@
         return audio_promise;
     }
 
+    function Subtitle_Audio_Remove()
+    {
+        let sub_index = 0;
+        const element = document.querySelector('#lln-subs');
+        if (element)
+        {
+            sub_index = element.dataset.index;
+        }
+
+        [video_url, video_id, video_current_time] = Get_Video_URL();
+
+        const audio_filename = `LLW_to_Anki_${video_id}_${sub_index}.webm`;
+
+        llw_audio_filenames = llw_audio_filenames.filter(name => name !== audio_filename);
+    }
+
     async function Subtitle_Dictionary_Get_Data() // This is where we pull all the data we want from the popup dictionary
     {
         const permission_data = '{"action":"requestPermission","version":6}';
@@ -459,6 +482,7 @@
                 "ankiExampleSentencesSelected",
                 "ankiOtherTranslationSelected",
                 "ankiBaseFormSelected",
+                "ankiAiAssistantSelected",
                 "ankiAudioSelected",
                 "ankiFieldURL",
                 "ankiConnectUrl",
@@ -476,6 +500,7 @@
                 ankiExampleSentencesSelected,
                 ankiOtherTranslationSelected,
                 ankiBaseFormSelected,
+                ankiAiAssistantSelected,
                 ankiAudioSelected,
                 ankiFieldURL,
                 ankiConnectUrl,
@@ -538,29 +563,35 @@
 
                         // The popup dictionary window
                         let selected_word = "";
+                        let word_base_form = "";
                         const dict_context = document.getElementsByClassName('lln-dict-contextual');
                         if (dict_context.length)
                         {
-                            // Get word selected
+                            // Get word selected, the word which is visible in the subtitle
                             selected_word = dict_context[0].children[1].innerText;
 
-                            if (ankiHighLightSavedWords)
+                            const selected_element = document.getElementsByClassName('lln-is-open-in-full-dict')[0];
+                            if (selected_element)
                             {
-                                const selected_element = document.getElementsByClassName('lln-is-open-in-full-dict')[0];
-                                if (selected_element)
+                                const data_word_key = selected_element.getAttribute('data-word-key');
+                                word_base_form = data_word_key.split('|')[1]; // "пешеходный"
+
+                                // NOTE : should we always be storing the saved word, regardless of highliting?
+                                console.log(`Adding base form to word list : ${word_base_form}`);
+                                if (!llw_saved_words.includes(word_base_form))
                                 {
-                                    const data_word_key = selected_element.getAttribute('data-word-key');
-                                    const base_word_form = data_word_key.split('|')[1]; // "пешеходный"
+                                    llw_saved_words.push(word_base_form);
 
-                                    console.log(`Fill ankiHighLightSavedWords : ${base_word_form}`);
-                                    if (!llw_saved_words.includes(base_word_form))
-                                    {
-                                        llw_saved_words.push(base_word_form);
-
-                                        Highlight_Words_Store();
-                                    }
+                                    Highlight_Words_Store();
                                 }
+                            }
 
+
+                            if (ankiBaseFormSelected)
+                            {
+                                console.log("Fill ankiBaseFormSelected");
+
+                                card_data[ankiBaseFormSelected] = word_base_form;
                             }
 
                             if (ankiWordSelected)
@@ -594,12 +625,14 @@
 
                                 card_data[ankiOtherTranslationSelected] = full_definition_element[0].innerHTML;
                             }
-                            if (ankiBaseFormSelected)
-                            {
-                                console.log("Fill ankiBaseFormSelected");
 
-                                card_data[ankiBaseFormSelected] = full_definition_element[0].childNodes[1].childNodes[1].innerText;
-                            }
+                            // TODO : we can get the word grammar form here: "noun", "verb"...
+                            //if (ankiGrammarForm)
+                            //{
+                            //    const grammar = full_definition_element[0].querySelector("span");
+
+                            //    card_data[ankiOtherTranslationSelected] = grammar.innerText;
+                            //}
                         }
 
                         if (ankiSubtitleSelected)
@@ -721,6 +754,20 @@
                             }
                         }
 
+                        if (ankiAiAssistantSelected)
+                        {
+                            console.log("Fill ankiAiAssistantSelected");
+
+                            const ai_element = document.getElementsByClassName('lexa-html')[0];
+                            if (ai_element)
+                            {
+                                const ai_text = ai_element.textContent;
+                                card_data[ankiAiAssistantSelected] = ai_text;
+
+                                console.log(ai_text);
+                            }
+                        }
+
                         console.log("Card data to send to Anki :", card_data);
 
                         console.log("Audio Data :", audio_data);
@@ -794,25 +841,32 @@
                     console.log(`${key} has changed from '${oldValue}' to '${newValue}'`);
                     llw_highlight_colour = newValue;
                 }
+
+                if (key === 'ankiPuaseOnSavedWord')
+                {
+                    console.log(`${key} has changed from '${oldValue}' to '${newValue}'`);
+                    llw_pause_on_saved_word = newValue;
+                }
             }
         }
     });
 
     function Highlight_Words_Setup()
     {
-        chrome.storage.local.get(['ankiHighlightWordList', 'ankiHighLightColour', 'ankiHighLightSavedWords'],
-            ({ ankiHighlightWordList, ankiHighLightColour, ankiHighLightSavedWords }) =>
+        chrome.storage.local.get(['ankiHighlightWordList', 'ankiHighLightColour', 'ankiHighLightSavedWords', 'ankiPuaseOnSavedWord'],
+            ({ ankiHighlightWordList, ankiHighLightColour, ankiHighLightSavedWords, ankiPuaseOnSavedWord }) =>
             {
                 llw_saved_words = ankiHighlightWordList || [];
                 llw_highlight_colour = ankiHighLightColour || 'LightCoral';
                 llw_highlight_words = ankiHighLightSavedWords;
+                llw_pause_on_saved_word = ankiPuaseOnSavedWord;
 
                 if (!Array.isArray(llw_saved_words))
                 {
                     console.error("llw_saved_words is not an array.");
                 }
 
-                console.log("Highlight word settings:", { llw_saved_words, llw_highlight_colour, llw_highlight_words });
+                console.log("Highlight word settings:", { llw_saved_words, llw_highlight_colour, llw_highlight_words, llw_pause_on_saved_word });
 
                 console.log("Waiting for subtitle content element...");
                 const wait_for_subtitles_to_show = setInterval(function ()
@@ -834,7 +888,7 @@
                                     {
                                         console.log("We need to update the subtitle highlights");
 
-                                        if (llw_highlight_words) Highlight_Words_In_Current_Subtitle();
+                                        Highlight_Words_In_Current_Subtitle(llw_highlight_words, llw_pause_on_saved_word);
 
                                         Add_Anki_Button_To_Popup_Dictionary();
                                         break;
@@ -849,9 +903,10 @@
         );
     }
 
-    function Highlight_Words_In_Current_Subtitle()
+    function Highlight_Words_In_Current_Subtitle(should_highlight, should_pause)
     {
         const subtitle_element = document.getElementsByClassName('lln-subs')[0];
+        let a_saved_word_was_found_in_subtitle = false;
 
         subtitle_element.querySelectorAll('[data-word-key*="WORD|"]').forEach((element) =>
         {
@@ -863,9 +918,22 @@
 
             if (llw_saved_words.includes(inner_word) || (base_form_word && llw_saved_words.includes(base_form_word)))
             {
-                element.style.color = llw_highlight_colour || 'LightCoral'; // #F08080
+                if (should_highlight) element.style.color = llw_highlight_colour || 'LightCoral'; // #F08080
+                a_saved_word_was_found_in_subtitle = true;
             }
         });
+
+        if (a_saved_word_was_found_in_subtitle && should_pause)
+        {
+            const auto_pause_element = document.getElementsByClassName('lln-toggle')[0];
+            if (auto_pause_element && !auto_pause_element.checked)
+            {
+                auto_pause_element.click();
+                console.log(`Autopause should be 'ON'`);
+
+                // TODO : wait for video to pause then toggle it back to initial state?
+            }
+        }
     }
 
     function Highlight_Words_Store()
@@ -882,37 +950,38 @@
         //llw_saved_words = unique_words_only;
         //chrome.storage.local.set({ ankiHighlightWordList: unique_words_only });
 
-        // NOTE : On extension removal, this stored list will be lost!
         chrome.storage.local.set({ ankiHighlightWordList: llw_saved_words });
     }
 
     function Highlight_Words_Remove_Word()
     {
-        // 1 - Get the current word
+        // 1 - Get the base form of the word
         // 2 - Remove from list
         // 3 - Update Store 
-        // 4 - Update subtitle
 
-        const dict_context = document.getElementsByClassName('lln-dict-contextual')[0];
-        if (!dict_context)
+        const selected_element = document.getElementsByClassName('lln-is-open-in-full-dict')[0];
+        if (selected_element)
         {
-            console.warm("Cannot find 'lln-dict-contextual'");
-            return;
-        }
+            const data_word_key = selected_element.getAttribute('data-word-key');
+            const base_word_form = data_word_key.split('|')[1]; // "пешеходный"
 
-        const selected_word = dict_context.children[1].innerText;
-
-        if (selected_word)
-        {
-            const index = llw_saved_words.indexOf(selected_word);
+            const index = llw_saved_words.indexOf(base_word_form);
             if (index !== -1)
             {
                 llw_saved_words.splice(index, 1);
 
-                console.log(`Removed ${selected_word} from highlight list`);
+                console.log(`Removed '${base_word_form}' from highlight list`);
 
                 Highlight_Words_Store();
             }
+            else
+            {
+                console.log(`Cannot remove ${base_word_form} from highlight list`);
+            }
+        }
+        else
+        {
+            console.log("Unable to find element 'lln-is-open-in-full-dict'");
         }
     }
 

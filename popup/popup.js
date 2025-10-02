@@ -25,6 +25,7 @@ const anki_field_names = [
     "ankiExampleSentencesSelected",
     "ankiOtherTranslationSelected",
     "ankiBaseFormSelected",
+    "ankiAiAssistantSelected",
     "ankiAudioSelected",
     "ankiFieldURL"
 ];
@@ -37,6 +38,7 @@ const anki_id_names = [
     "ankiExampleSentenceSource",
     "ankiHighLightSavedWords",
     "ankiHighLightColour",
+    "ankiPuaseOnSavedWord",
 
     ...anki_field_names];
 
@@ -51,16 +53,212 @@ let anki_storage_values = Object.fromEntries(anki_id_names.map((key) => [key, ""
 //
 // STARTUP
 //
-if (document.readyState === "loading")
+(document.readyState === "loading") ?
+    document.addEventListener("DOMContentLoaded", () => startup()) :
+    startup();
+
+function startup()
 {
-    document.addEventListener("DOMContentLoaded", () => init());
-}
-else
-{
-    init();
+    tab_setup();
+    settings_setup();
+    words_setup();
 }
 
-function init()
+//
+// TABS
+//
+
+let tab_contents = [];
+let tab_links = [];
+
+// TODO : another method instead of this id
+function tab_open(tab_id)
+{
+    tab_contents.forEach(tc => tc.style.display = "none");
+    tab_links.forEach(btn => btn.classList.remove("active"));
+
+    tab_contents[tab_id].style.display = "block";
+    tab_links[tab_id].classList.add("active");
+}
+
+function tab_setup()
+{
+    tab_contents = document.querySelectorAll(".tabcontent");
+
+    tab_links = [
+        document.querySelector(".tablinks.tabSettings"),
+        document.querySelector(".tablinks.tabWords")
+    ];
+
+    tab_links[0].addEventListener("click", () => tab_open(0));
+    tab_links[1].addEventListener("click", () => tab_open(1));
+
+    tab_open(0); // default tab
+}
+
+//
+// WORDS
+//
+
+function words_setup()
+{
+    words_load();
+
+    // DOWNLOAD
+    const words_download_btn = document.getElementById("wordsDownloadBtn");
+
+    words_download_btn.addEventListener("click", () =>
+    {
+        chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
+        {
+            const words = data.ankiHighlightWordList;
+            const blob = new Blob([words.join("\n")], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "words.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            URL.revokeObjectURL(url);
+        });
+    });
+
+    // UPLOAD
+    const words_upload_btn = document.getElementById("wordsUploadBtn");
+    const words_upload_input = document.getElementById("wordsUploadInput");
+
+    words_upload_btn.addEventListener("click", () =>
+    {
+        words_upload_input.click(); // open file picker
+    });
+
+    words_upload_input.addEventListener("change", (event) =>
+    {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e)
+        {
+            const text = e.target.result;
+
+            // split words by newlines, trim whitespace, remove empty lines
+            const new_words = text.split(/\r?\n/).map(w => w.trim()).filter(Boolean);
+
+            // NOTE : do we want to upload and add the words to the current list,
+            //          or replace the list entirely
+            chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
+            {
+                const all_words = Array.from(new Set([...data.ankiHighlightWordList, ...new_words]));
+                chrome.storage.local.set({ ankiHighlightWordList: all_words }, () =>
+                {
+                    words_load();
+                });
+            });
+        };
+        reader.readAsText(file);
+
+        words_upload_input.value = "";
+    });
+
+    // USER ADD
+    const words_add_input = document.getElementById("wordsAddInput");
+    const words_add_button = document.getElementById("wordsAddBtn");
+
+    words_add_button.addEventListener("click", () =>
+    {
+        const word = words_add_input.value.trim();
+        if (!word) return;
+
+        chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
+        {
+            const words = data.ankiHighlightWordList;
+
+            if (!words.includes(word))
+            {
+                words.push(word);
+                chrome.storage.local.set({ ankiHighlightWordList: words }, () =>
+                {
+                    words_load();
+                    words_add_input.value = "";
+                });
+            }
+            else
+            {
+                alert("Word already exists!");
+            }
+        });
+    });
+
+    // allow pressing Enter in the input to add
+    words_add_input.addEventListener("keydown", (e) =>
+    {
+        if (e.key === "Enter")
+        {
+            words_add_button.click();
+            e.preventDefault();
+        }
+    });
+
+}
+
+function words_load()
+{
+    const words_total = document.getElementById("wordsTotal");
+    const word_list = document.getElementById("wordsList");
+
+    chrome.storage.local.get({ ankiHighlightWordList: [] }, (data) =>
+    {
+        const words = data.ankiHighlightWordList;
+        const list = document.getElementById("wordsList");
+
+        console.log(words);
+
+        words_total.textContent = `Total words: ${words.length}`;
+
+        list.innerHTML = ""; // clear old entries
+
+        if (words.length === 0)
+        {
+            const li = document.createElement("li");
+            li.textContent = "(No words saved yet)";
+            list.appendChild(li);
+        }
+        else
+        {
+            words.forEach((word, index) =>
+            {
+                const li = document.createElement("li");
+
+                const delete_btn = document.createElement("button");
+                delete_btn.textContent = "x";
+                delete_btn.className = "deleteWordBtn";
+                delete_btn.title = "Delete word";
+                delete_btn.addEventListener("click", () =>
+                {
+                    words.splice(index, 1);
+                    chrome.storage.local.set({ ankiHighlightWordList: words }, words_load);
+                });
+
+                const span = document.createElement("span");
+                span.textContent = word;
+
+                li.appendChild(delete_btn);
+                li.appendChild(span);
+                word_list.appendChild(li);
+            });
+        }
+    });
+}
+
+//
+// SETTINGS
+//
+
+function settings_setup()
 {
     for (let i = 0; i < anki_id_names.length; i++)
     {
@@ -85,6 +283,8 @@ function init()
         anki_storage_values["ankiHighLightSavedWords"] = anki_field_elements.ankiHighLightSavedWords.checked;
         anki_storage_values["ankiHighLightColour"] = anki_field_elements.ankiHighLightColour.value;
 
+        anki_storage_values["ankiPuaseOnSavedWord"] = anki_field_elements.ankiPuaseOnSavedWord.checked;
+
         console.log(anki_storage_values);
 
         chrome.storage.local.set(anki_storage_values, () =>
@@ -104,7 +304,7 @@ function init()
     {
         return () =>
         {
-            return Add_Options_To_Field_Dropdown_Promise(field_name, anki_field_data, anki_storage_values[field_name]);
+            return add_options_to_field_dropdown_promise(field_name, anki_field_data, anki_storage_values[field_name]);
         };
     });
 
@@ -126,7 +326,7 @@ function init()
                 }
                 else
                 {
-                    Update_Selections_With_Saved_Values();
+                    update_selections_with_saved_values();
                 }
             })
             .catch(error => alert(`Failed to connect to Anki ${anki_url}, make sure Anki is open and AnkiConnect is installed : ${error}`));
@@ -137,7 +337,7 @@ function init()
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 //
 
-function Fetch_From_Anki(body)
+function fetch_from_anki(body)
 {
     return new Promise((resolve, reject) =>
     {
@@ -156,7 +356,7 @@ function Fetch_From_Anki(body)
     });
 }
 
-function Add_Options_To_Dropdown(dropdown, data)
+function add_options_to_dropdown(dropdown, data)
 {
     dropdown.length = 0;
 
@@ -168,7 +368,7 @@ function Add_Options_To_Dropdown(dropdown, data)
     }
 }
 
-function Add_Options_To_Field_Dropdown_Promise(element_id, data, saved_value)
+function add_options_to_field_dropdown_promise(element_id, data, saved_value)
 {
     return new Promise((resolve, reject) =>
     {
@@ -185,7 +385,8 @@ function Add_Options_To_Field_Dropdown_Promise(element_id, data, saved_value)
         }
 
         const blank = document.createElement("option");
-        blank.value = blank.text = "";
+        blank.value = "";
+        blank.text = "<blank>";
         dropdown.add(blank);
 
         dropdown.value = saved_value;
@@ -194,7 +395,7 @@ function Add_Options_To_Field_Dropdown_Promise(element_id, data, saved_value)
     });
 }
 
-function Update_Selections_With_Saved_Values()
+function update_selections_with_saved_values()
 {
     chrome.storage.local.get(anki_id_names, res =>
     {
@@ -205,23 +406,25 @@ function Update_Selections_With_Saved_Values()
         anki_field_elements.ankiHighLightSavedWords.checked = res.ankiHighLightSavedWords || false;
         anki_field_elements.ankiHighLightColour.value = res.ankiHighLightColour || "#ffffff";
 
+        anki_field_elements.ankiPuaseOnSavedWord.checked = res.ankiPuaseOnSavedWord || false;
+
         // Frist we need to get all deck names and note types, 
         // after we get a note type, we can then fetch for all the fields of that note type
 
         const deck_names_element = anki_field_elements.ankiDeckNameSelected;
         const note_names_element = anki_field_elements.ankiNoteNameSelected;
 
-        note_names_element.addEventListener('change', Update_Field_Dropdown);
+        note_names_element.addEventListener('change', update_field_dropdown);
 
-        Fetch_From_Anki('{"action":"multi","params":{"actions":[{"action":"deckNames"},{"action":"modelNames"}]}}')
+        fetch_from_anki('{"action":"multi","params":{"actions":[{"action":"deckNames"},{"action":"modelNames"}]}}')
             .then((data) =>
             {
                 if (data.length === 2)
                 {
                     const [deck_names, note_names] = data;
 
-                    Add_Options_To_Dropdown(deck_names_element, deck_names);
-                    Add_Options_To_Dropdown(note_names_element, note_names);
+                    add_options_to_dropdown(deck_names_element, deck_names);
+                    add_options_to_dropdown(note_names_element, note_names);
 
                     const ankiDeckNameSelected = res.ankiDeckNameSelected;
                     const ankiNoteNameSelected = res.ankiNoteNameSelected;
@@ -232,18 +435,18 @@ function Update_Selections_With_Saved_Values()
                     if (ankiNoteNameSelected)
                         note_names_element.value = ankiNoteNameSelected;
 
-                    Update_Field_Dropdown();
+                    update_field_dropdown();
                 }
             })
             .catch(error => console.error("Unable to get deck and model names", error));
     });
 }
 
-function Update_Field_Dropdown()
+function update_field_dropdown()
 {
     const note_names_element = anki_field_elements.ankiNoteNameSelected;
 
-    Fetch_From_Anki(`{"action": "modelFieldNames","params":{"modelName":"${note_names_element.value}"}}`)
+    fetch_from_anki(`{"action": "modelFieldNames","params":{"modelName":"${note_names_element.value}"}}`)
         .then((data) =>
         {
             // NOTE : if we switch to another note type that has the same named field, they will not be reset

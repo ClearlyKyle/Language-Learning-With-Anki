@@ -1,55 +1,140 @@
+html,
 body {
-  width: 350px;
-}
-
-form {
-  margin: 10px 0;
-  text-align: left;
+    width: 400px;
+    height: 600px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-size: 14px;
 }
 
 label {
-  display: block;
-  margin: 10px 0;
+    display: block;
+    margin: 8px 0;
 }
 
 label span {
-  display: inline-block;
-  vertical-align: middle;
-  text-align: right;
-  width: 90px;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: right;
+    width: 140px;
 }
 
-select {
-  width: 190px;
-  vertical-align: middle;
-  margin-left: 10px;
-  height: 20px;
+label select {
+    width: 190px;
+    vertical-align: middle;
+    margin-left: 10px;
+    height: 20px;
+}
+
+label input {
+    vertical-align: middle;
+}
+
+#ankiPuaseOnSavedWord {
+    margin-left: 43px;
 }
 
 #ankiConnectUrl {
-  width: 190px;
-  height: 20px;
-  margin-left: 10px;
+    width: 190px;
+    height: 20px;
+    margin-left: 10px;
 }
 
 #saveAnkiBtn {
-  display: block;
-  width: 100px;
-  margin: 0 auto;
+    display: block;
+    width: 100px;
+    margin: 0 auto;
 }
 
 #ankiHighLightColour {
-  display: inline-block;
-  width: 100px;
-  margin: 0 auto;
+    display: inline-block;
+    width: 100px;
+    height: 20px;
+    border: none;
+    cursor: pointer;
 }
 
 #ankiHighLightSavedWords {
-  display: inline-block;
-  width: 100px;
-  margin: 0 auto;
+    display: inline-block;
+    width: 100px;
+    margin: 0 auto;
 }
 
-#highlightSpan {
-  margin-top: -10;
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 6px 16px;
+    transition: 0.3s;
+}
+
+.tab button:hover {
+    background-color: #ddd;
+}
+
+.tab button.active {
+    background-color: #ccc;
+}
+
+.tabcontent {
+    overflow: hidden;
+    /*max-height: calc(600px - 33px);*/
+    display: none;
+}
+
+#Words {
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+#wordsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    margin-top: 3px;
+    padding-left: 10px;
+}
+
+#wordsButtons {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+#wordsList {
+    padding-left: 40px;
+    margin: 5px;
+    line-height: 1;
+    height: calc(600px - 70px);
+}
+
+#wordsList li {
+    margin-bottom: 6px;
+}
+
+#wordsList {
+    list-style-type: decimal;
+}
+
+.deleteWordBtn {
+    background-color: transparent;
+    border: none;
+    color: red;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.deleteWordBtn:hover {
+    color: darkred;
 }

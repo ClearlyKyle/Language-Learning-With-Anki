@@ -542,9 +542,10 @@
                         const dict_context = document.getElementsByClassName('lln-dict-contextual');
                         if (dict_context.length)
                         {
-                            // Get word selected
+                            // Get word selected, the word which is visible in the subtitle
                             selected_word = dict_context[0].children[1].innerText;
 
+                            // NOTE : should we always be storing the saved word, regardless of highliting?
                             if (ankiHighLightSavedWords)
                             {
                                 const selected_element = document.getElementsByClassName('lln-is-open-in-full-dict')[0];
@@ -914,31 +915,33 @@
 
     function Highlight_Words_Remove_Word()
     {
-        // 1 - Get the current word
+        // 1 - Get the base form of the word
         // 2 - Remove from list
         // 3 - Update Store 
-        // 4 - Update subtitle
 
-        const dict_context = document.getElementsByClassName('lln-dict-contextual')[0];
-        if (!dict_context)
+        const selected_element = document.getElementsByClassName('lln-is-open-in-full-dict')[0];
+        if (selected_element)
         {
-            console.warm("Cannot find 'lln-dict-contextual'");
-            return;
-        }
+            const data_word_key = selected_element.getAttribute('data-word-key');
+            const base_word_form = data_word_key.split('|')[1]; // "пешеходный"
 
-        const selected_word = dict_context.children[1].innerText;
-
-        if (selected_word)
-        {
-            const index = llw_saved_words.indexOf(selected_word);
+            const index = llw_saved_words.indexOf(base_word_form);
             if (index !== -1)
             {
                 llw_saved_words.splice(index, 1);
 
-                console.log(`Removed ${selected_word} from highlight list`);
+                console.log(`Removed '${base_word_form}' from highlight list`);
 
                 Highlight_Words_Store();
             }
+            else
+            {
+                console.log(`Cannot remove ${base_word_form} from highlight list`);
+            }
+        }
+        else
+        {
+            console.log("Unable to find element 'lln-is-open-in-full-dict'");
         }
     }
 

@@ -57,7 +57,7 @@ Exported data fields:
 Settings allow you to choose which fields are filled with what data. A `<blank>` options means that data is skipped
 
 ![options-screenshot](/screenshots/settings.png)
-![options-screenshot](/screenshots/words.png)
+![options-screenshot](/screenshots/words.PNG)
 
 ## Possible Errors
 

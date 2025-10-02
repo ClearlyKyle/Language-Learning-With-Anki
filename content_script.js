@@ -561,30 +561,38 @@
 
                         // The popup dictionary window
                         let selected_word = "";
+                        let word_base_form = "";
                         const dict_context = document.getElementsByClassName('lln-dict-contextual');
                         if (dict_context.length)
                         {
                             // Get word selected, the word which is visible in the subtitle
                             selected_word = dict_context[0].children[1].innerText;
 
-                            // NOTE : should we always be storing the saved word, regardless of highliting?
-                            if (ankiHighLightSavedWords)
+                            const selected_element = document.getElementsByClassName('lln-is-open-in-full-dict')[0];
+                            if (selected_element)
                             {
-                                const selected_element = document.getElementsByClassName('lln-is-open-in-full-dict')[0];
-                                if (selected_element)
+                                const data_word_key = selected_element.getAttribute('data-word-key');
+                                word_base_form = data_word_key.split('|')[1]; // "пешеходный"
+
+                                console.log(`Adding base form to word list : ${word_base_form}`);
+                                if (!llw_saved_words.includes(word_base_form))
                                 {
-                                    const data_word_key = selected_element.getAttribute('data-word-key');
-                                    const base_word_form = data_word_key.split('|')[1]; // "пешеходный"
+                                    llw_saved_words.push(word_base_form);
 
-                                    console.log(`Fill ankiHighLightSavedWords : ${base_word_form}`);
-                                    if (!llw_saved_words.includes(base_word_form))
-                                    {
-                                        llw_saved_words.push(base_word_form);
-
-                                        Highlight_Words_Store();
-                                    }
+                                    Highlight_Words_Store();
                                 }
+                            }
 
+                            // NOTE : should we always be storing the saved word, regardless of highliting?
+                            //if (ankiHighLightSavedWords)
+                            //{
+                            //}
+
+                            if (ankiBaseFormSelected)
+                            {
+                                console.log("Fill ankiBaseFormSelected");
+
+                                card_data[ankiBaseFormSelected] = word_base_form;
                             }
 
                             if (ankiWordSelected)
@@ -618,12 +626,14 @@
 
                                 card_data[ankiOtherTranslationSelected] = full_definition_element[0].innerHTML;
                             }
-                            if (ankiBaseFormSelected)
-                            {
-                                console.log("Fill ankiBaseFormSelected");
 
-                                card_data[ankiBaseFormSelected] = full_definition_element[0].childNodes[1].childNodes[1].innerText;
-                            }
+                            // TODO : we can get the word grammar form here
+                            //if (ankiGrammarForm)
+                            //{
+                            //    const grammar = full_definition_element[0].querySelector("span");
+
+                            //    card_data[ankiOtherTranslationSelected] = grammar.innerText;
+                            //}
                         }
 
                         if (ankiSubtitleSelected)

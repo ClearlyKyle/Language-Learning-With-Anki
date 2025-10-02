@@ -482,6 +482,7 @@
                 "ankiExampleSentencesSelected",
                 "ankiOtherTranslationSelected",
                 "ankiBaseFormSelected",
+                "ankiAiAssistantSelected",
                 "ankiAudioSelected",
                 "ankiFieldURL",
                 "ankiConnectUrl",
@@ -499,6 +500,7 @@
                 ankiExampleSentencesSelected,
                 ankiOtherTranslationSelected,
                 ankiBaseFormSelected,
+                ankiAiAssistantSelected,
                 ankiAudioSelected,
                 ankiFieldURL,
                 ankiConnectUrl,
@@ -574,6 +576,7 @@
                                 const data_word_key = selected_element.getAttribute('data-word-key');
                                 word_base_form = data_word_key.split('|')[1]; // "пешеходный"
 
+                                // NOTE : should we always be storing the saved word, regardless of highliting?
                                 console.log(`Adding base form to word list : ${word_base_form}`);
                                 if (!llw_saved_words.includes(word_base_form))
                                 {
@@ -583,10 +586,6 @@
                                 }
                             }
 
-                            // NOTE : should we always be storing the saved word, regardless of highliting?
-                            //if (ankiHighLightSavedWords)
-                            //{
-                            //}
 
                             if (ankiBaseFormSelected)
                             {
@@ -627,7 +626,7 @@
                                 card_data[ankiOtherTranslationSelected] = full_definition_element[0].innerHTML;
                             }
 
-                            // TODO : we can get the word grammar form here
+                            // TODO : we can get the word grammar form here: "noun", "verb"...
                             //if (ankiGrammarForm)
                             //{
                             //    const grammar = full_definition_element[0].querySelector("span");
@@ -752,6 +751,20 @@
                             {
                                 console.log(`${audio_filename} already exists.`);
                                 card_data[ankiAudioSelected] = '[sound:' + audio_filename + ']';
+                            }
+                        }
+
+                        if (ankiAiAssistantSelected)
+                        {
+                            console.log("Fill ankiAiAssistantSelected");
+
+                            const ai_element = document.getElementsByClassName('lexa-html')[0];
+                            if (ai_element)
+                            {
+                                const ai_text = ai_element.textContent;
+                                card_data[ankiAiAssistantSelected] = ai_text;
+
+                                console.log(ai_text);
                             }
                         }
 
@@ -888,11 +901,6 @@
                 }, 100);
             }
         );
-    }
-
-    function Hightlight_Pause_On_Saved_Word()
-    {
-
     }
 
     function Highlight_Words_In_Current_Subtitle(should_highlight, should_pause)

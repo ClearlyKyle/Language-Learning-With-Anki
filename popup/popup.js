@@ -25,6 +25,7 @@ const anki_field_names = [
     "ankiExampleSentencesSelected",
     "ankiOtherTranslationSelected",
     "ankiBaseFormSelected",
+    "ankiAiAssistantSelected",
     "ankiAudioSelected",
     "ankiFieldURL"
 ];
@@ -163,7 +164,7 @@ function words_setup()
         words_upload_input.value = "";
     });
 
-    // USER ADD 
+    // USER ADD
     const words_add_input = document.getElementById("wordsAddInput");
     const words_add_button = document.getElementById("wordsAddBtn");
 
@@ -303,7 +304,7 @@ function settings_setup()
     {
         return () =>
         {
-            return Add_Options_To_Field_Dropdown_Promise(field_name, anki_field_data, anki_storage_values[field_name]);
+            return add_options_to_field_dropdown_promise(field_name, anki_field_data, anki_storage_values[field_name]);
         };
     });
 
@@ -325,7 +326,7 @@ function settings_setup()
                 }
                 else
                 {
-                    Update_Selections_With_Saved_Values();
+                    update_selections_with_saved_values();
                 }
             })
             .catch(error => alert(`Failed to connect to Anki ${anki_url}, make sure Anki is open and AnkiConnect is installed : ${error}`));
@@ -336,7 +337,7 @@ function settings_setup()
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 //
 
-function Fetch_From_Anki(body)
+function fetch_from_anki(body)
 {
     return new Promise((resolve, reject) =>
     {
@@ -355,7 +356,7 @@ function Fetch_From_Anki(body)
     });
 }
 
-function Add_Options_To_Dropdown(dropdown, data)
+function add_options_to_dropdown(dropdown, data)
 {
     dropdown.length = 0;
 
@@ -367,7 +368,7 @@ function Add_Options_To_Dropdown(dropdown, data)
     }
 }
 
-function Add_Options_To_Field_Dropdown_Promise(element_id, data, saved_value)
+function add_options_to_field_dropdown_promise(element_id, data, saved_value)
 {
     return new Promise((resolve, reject) =>
     {
@@ -394,7 +395,7 @@ function Add_Options_To_Field_Dropdown_Promise(element_id, data, saved_value)
     });
 }
 
-function Update_Selections_With_Saved_Values()
+function update_selections_with_saved_values()
 {
     chrome.storage.local.get(anki_id_names, res =>
     {
@@ -413,17 +414,17 @@ function Update_Selections_With_Saved_Values()
         const deck_names_element = anki_field_elements.ankiDeckNameSelected;
         const note_names_element = anki_field_elements.ankiNoteNameSelected;
 
-        note_names_element.addEventListener('change', Update_Field_Dropdown);
+        note_names_element.addEventListener('change', update_field_dropdown);
 
-        Fetch_From_Anki('{"action":"multi","params":{"actions":[{"action":"deckNames"},{"action":"modelNames"}]}}')
+        fetch_from_anki('{"action":"multi","params":{"actions":[{"action":"deckNames"},{"action":"modelNames"}]}}')
             .then((data) =>
             {
                 if (data.length === 2)
                 {
                     const [deck_names, note_names] = data;
 
-                    Add_Options_To_Dropdown(deck_names_element, deck_names);
-                    Add_Options_To_Dropdown(note_names_element, note_names);
+                    add_options_to_dropdown(deck_names_element, deck_names);
+                    add_options_to_dropdown(note_names_element, note_names);
 
                     const ankiDeckNameSelected = res.ankiDeckNameSelected;
                     const ankiNoteNameSelected = res.ankiNoteNameSelected;
@@ -434,18 +435,18 @@ function Update_Selections_With_Saved_Values()
                     if (ankiNoteNameSelected)
                         note_names_element.value = ankiNoteNameSelected;
 
-                    Update_Field_Dropdown();
+                    update_field_dropdown();
                 }
             })
             .catch(error => console.error("Unable to get deck and model names", error));
     });
 }
 
-function Update_Field_Dropdown()
+function update_field_dropdown()
 {
     const note_names_element = anki_field_elements.ankiNoteNameSelected;
 
-    Fetch_From_Anki(`{"action": "modelFieldNames","params":{"modelName":"${note_names_element.value}"}}`)
+    fetch_from_anki(`{"action": "modelFieldNames","params":{"modelName":"${note_names_element.value}"}}`)
         .then((data) =>
         {
             // NOTE : if we switch to another note type that has the same named field, they will not be reset

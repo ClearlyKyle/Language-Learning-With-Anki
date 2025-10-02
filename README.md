@@ -33,7 +33,7 @@ When using the audio field, the extension will replay the subtitle again to coll
 
 The ai field will be filled with whatever Ai mode you have currently selected (Explain, Examples, Grammar).
 
-![bubble-screenshot](screenshots/fields.PNG)
+![bubble-screenshot](screenshots/fields.png)
 
 ## Settings
 

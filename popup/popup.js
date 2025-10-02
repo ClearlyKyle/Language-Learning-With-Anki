@@ -281,7 +281,8 @@ function settings_setup()
         anki_storage_values["ankiExampleSentenceSource"] = anki_field_elements.ankiExampleSentenceSource.value;
         anki_storage_values["ankiHighLightSavedWords"] = anki_field_elements.ankiHighLightSavedWords.checked;
         anki_storage_values["ankiHighLightColour"] = anki_field_elements.ankiHighLightColour.value;
-        anki_storage_values["ankiPuaseOnSavedWord"] = anki_field_elements.ankiPuaseOnSavedWord.value;
+
+        anki_storage_values["ankiPuaseOnSavedWord"] = anki_field_elements.ankiPuaseOnSavedWord.checked;
 
         console.log(anki_storage_values);
 
